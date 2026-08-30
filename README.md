@@ -83,6 +83,6 @@ Trabajamos con **forks + `upstream`** (el flujo de colaboración real del open s
 ## Integrantes
 
 | Legajo | Nombre y Apellido | Email |
-|  |  |  |
+|---|---|---|
 | 33136 | Maria Constanza Nosetti | cotinosetti@gmail.com |
-|  |  |  |
+| 33716 | Luca Diaz Guevara | lucadiazguevara@gmail.com |

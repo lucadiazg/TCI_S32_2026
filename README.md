@@ -86,3 +86,4 @@ Trabajamos con **forks + `upstream`** (el flujo de colaboración real del open s
 |---|---|---|
 | 33136 | Maria Constanza Nosetti | cotinosetti@gmail.com |
 | 33716 | Luca Diaz Guevara | lucadiazguevara@gmail.com |
+| 33784 | Zoe Valentina Puebla | zoevalen2003@gmail.com |

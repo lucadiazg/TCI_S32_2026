@@ -14,6 +14,11 @@ Regla principal:
 
 No se deben mezclar cambios que no estén relacionados dentro de una misma rama.
 
+Motivos de decision:
+Ayuda a mantener un registro claro y lógico de qué cambios corresponden a cada característica específica.
+Fomenta la colaboración mediante pull requests.
+Se centra en la integración y entrega continua.
+
 ## Actualizar el repositorio
 
 Antes de comenzar una nueva tarea, se debe actualizar `main`:

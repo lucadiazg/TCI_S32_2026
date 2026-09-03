@@ -1,3 +1,3 @@
 # Planificación del equipo
 
-Equipo : N
+Equipo  N

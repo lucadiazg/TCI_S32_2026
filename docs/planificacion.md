@@ -1,3 +1,3 @@
 # Planificación del equipo
 
-Equipo S32
+Equipo : N

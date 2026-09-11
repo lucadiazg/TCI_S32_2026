@@ -55,6 +55,6 @@ Estados:
 # asignación de responsabilidades
 | Integrante | Historias asignadas | Esfuerzo total |
 |---|---|---:|
-| Integrante 1 | HU-001, HU-002, HU-003, HU-009 | 16 |
-| Integrante 2 | HU-004, HU-005, HU-006 | 15 |
-| Integrante 3 | HU-007, HU-008, HU-010 | 15 | 
+| Luca | HU-001, HU-002, HU-003, HU-009 | 16 |
+| Zoe | HU-004, HU-005, HU-006 | 15 |
+| Constanza | HU-007, HU-008, HU-010 | 15 | 

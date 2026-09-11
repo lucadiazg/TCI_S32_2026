@@ -108,3 +108,16 @@ El sistema descuenta del stock físico la cantidad utilizada.
 ### Diagrama de actividad CU 03: cargar stock recibido y ubicacion
 
 ![Diagrama de actividad CU 03](diagramas/Diagrama-actividad-CU-03.png)
+
+### Diagrama de secuencia CU 01 
+
+![Diagrama de secuencia CU 01](diagramas/Diagrama-secuencia-CU-01.png)
+
+### Diagrama de secuencia CU 02
+
+![Diagrama de secuencia CU 02](diagramas/Diagrama-secuencia-CU-02.png)
+
+### Diagrama de secuencia CU 03
+
+![Diagrama de secuencia CU 03](diagramas/Diagrama-secuencia-CU-03.png)
+

@@ -121,3 +121,60 @@ El sistema descuenta del stock físico la cantidad utilizada.
 
 ![Diagrama de secuencia CU 03](diagramas/Diagrama-secuencia-CU-03.png)
 
+## 4. ADR-001 — Arquitectura multicapa
+
+### Estado
+
+Aceptado.
+
+### Contexto
+
+El sistema debe gestionar stock, incidencias, reparaciones, reservas, pedidos de compra, trazabilidad y notificaciones. Además, debe permitir su evolución sin acoplar las reglas de negocio a la interfaz de usuario o a la persistencia.
+
+### Decisión
+
+Se adopta una arquitectura multicapa, organizada en:
+
+- Presentación
+- Aplicación
+- Dominio
+- Persistencia
+- Infraestructura
+
+### Justificación
+
+La separación en capas permite aislar las reglas de negocio, reducir el acoplamiento, facilitar las pruebas y favorecer la evolución del sistema.
+
+### Consecuencias
+
+**Positivas:**
+
+- Mayor mantenibilidad.
+- Mayor testabilidad.
+- Separación clara de responsabilidades.
+- Menor acoplamiento.
+- Facilidad para reemplazar componentes técnicos.
+
+**Negativas:**
+
+- Mayor estructura inicial.
+- Mayor cantidad de componentes.
+- Requiere respetar las responsabilidades y dependencias entre capas.
+
+# ADR-002 - Stack tecnológico
+
+ ## Estado
+ Aceptado.
+
+ ## Contexto
+ La cátedra establece React + TypeScript + Vite para el frontend.
+
+ ## Decisión
+ Se utilizará:
+ - React
+ - TypeScript
+ - Vite
+
+ ## Justificación
+ Se adopta el stack definido por la cátedra, evitando una desviación
+ tecnológica que requiera justificación adicional.

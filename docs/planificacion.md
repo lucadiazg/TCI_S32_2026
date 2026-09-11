@@ -6,21 +6,21 @@ El equipo utiliza Feature Branch Flow. Cada tarea se desarrolla en una rama inde
 
 # BACKLOG
 # Epica, features e historias de usuario
-EP-01 Gestion integral de mantenimiento y stock
-    F-01- Stock y trazabilidad
-        HU-001- consultar repuesto
-        HU-002- registrar uso del repuesto 
-        HU-003- registrar recepción de repuestos
-    F-02- Incidencias y reparaciones
-        HU-004- reportar incidencia
-        HU-005- gestionar incidencia
-    F-03- Reservas y mantenimiento preventivo
-        HU-006- reservar repuestos
-        HU-007- liberar reserva
-        HU-008- utilizar reserva
-    F-04- Compras y alertas
-        HU-009- consultar repuestos debajo del umbral
-        HU-010- generar pedido
+## EP-01 Gestion integral de mantenimiento y stock
+### F-01- Stock y trazabilidad
+HU-001- consultar repuesto
+HU-002- registrar uso del repuesto 
+HU-003- registrar recepción de repuestos
+### F-02- Incidencias y reparaciones
+HU-004- reportar incidencia
+HU-005- gestionar incidencia    
+### F-03- Reservas y mantenimiento preventivo
+HU-006- reservar repuestos
+HU-007- liberar reserva
+HU-008- utilizar reserva
+### F-04- Compras y alertas
+HU-009- consultar repuestos debajo del umbral
+HU-010- generar pedido
 
 # Estimaciones
 |Historia de usuario|Estimacion de esfuerzo|
@@ -51,3 +51,10 @@ Estados:
     En progreso
     En revisión
     Hechos
+
+# asignación de responsabilidades
+| Integrante | Historias asignadas | Esfuerzo total |
+|---|---|---:|
+| Integrante 1 | HU-001, HU-002, HU-003, HU-009 | 16 |
+| Integrante 2 | HU-004, HU-005, HU-006 | 15 |
+| Integrante 3 | HU-007, HU-008, HU-010 | 15 | 

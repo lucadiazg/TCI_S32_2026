@@ -1,0 +1,17 @@
+* {
+    box-sizing: border-box;
+}
+
+form {
+    max-width: 480px;
+    margin: 0 auto;
+}
+
+input,
+textarea,
+select,
+button {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 12px;
+}

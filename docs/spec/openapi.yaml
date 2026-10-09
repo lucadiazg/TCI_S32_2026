@@ -1,0 +1,775 @@
+openapi: 3.1.0
+
+info:
+  title: API de Gestión de Stock y Mantenimiento de Planta
+  version: 0.1.0
+  description: >
+    Contrato OpenAPI correspondiente a M2 del TCI.
+    Contempla reporte de incidencias, consulta de máquinas,
+    registro de uso de repuestos y recepción de stock.
+    Incluye operaciones de consulta necesarias para las
+    pantallas representativas de PharmaPlant CORE.
+
+servers:
+  - url: http://127.0.0.1:4010
+    description: Mock local con Prism
+
+paths:
+  /maquinas/{codigo}:
+    get:
+      summary: Buscar máquina por código
+      description: >
+        Permite identificar una máquina mediante el código QR
+        o el tag ingresado manualmente.
+
+      parameters:
+        - name: codigo
+          in: path
+          required: true
+          description: Código QR o tag de identificación de la máquina.
+          schema:
+            type: string
+            minLength: 1
+
+      responses:
+        '200':
+          description: Máquina encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Maquina'
+
+        '404':
+          description: Máquina no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /incidencias:
+    post:
+      summary: Reportar una incidencia
+      description: >
+        Registra una incidencia asociada a una máquina.
+        El turno y la fecha y hora se determinan
+        automáticamente al registrar el reporte.
+        El usuario se obtiene de la sesión autenticada.
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NuevaIncidencia'
+
+      responses:
+        '201':
+          description: Incidencia registrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Incidencia'
+
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+        '404':
+          description: Máquina no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /repuestos/{codigo}:
+    get:
+      summary: Buscar repuesto por código
+      description: >
+        Permite consultar un repuesto mediante código QR,
+        código de barras o ingreso manual.
+        Devuelve su identificación, ubicación,
+        stock disponible y umbral mínimo.
+
+      parameters:
+        - name: codigo
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+
+      responses:
+        '200':
+          description: Repuesto encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Repuesto'
+
+        '404':
+          description: Repuesto no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /reparaciones:
+    get:
+      summary: Listar reparaciones
+      description: >
+        Permite consultar las reparaciones disponibles
+        para seleccionar o cambiar la reparación en curso.
+
+      responses:
+        '200':
+          description: Lista de reparaciones
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Reparacion'
+
+
+  /reparaciones/{reparacionId}:
+    get:
+      summary: Consultar reparación
+      description: >
+        Devuelve los datos de una reparación,
+        incluyendo la incidencia asociada,
+        la máquina y su estado.
+
+      parameters:
+        - name: reparacionId
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+
+      responses:
+        '200':
+          description: Reparación encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reparacion'
+
+        '404':
+          description: Reparación no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+
+  /reparaciones/{reparacionId}/usos:
+    post:
+      summary: Registrar uso de un repuesto
+      description: >
+        Registra la cantidad de un repuesto utilizada
+        durante una reparación.
+        Actualiza el stock y devuelve una alerta cuando
+        el stock disponible alcanza o queda por debajo
+        del umbral mínimo.
+
+      parameters:
+        - name: reparacionId
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsoRepuestoRequest'
+
+      responses:
+        '201':
+          description: Uso registrado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsoRepuestoResponse'
+
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+        '404':
+          description: Reparación o repuesto no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+        '409':
+          description: >
+            Stock disponible insuficiente o reparación
+            que no admite registrar consumos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /pedidos:
+    get:
+      summary: Listar pedidos de compra
+      description: >
+        Permite consultar los pedidos de compra
+        para seleccionar o cambiar la orden
+        durante la recepción de stock.
+
+      responses:
+        '200':
+          description: Lista de pedidos de compra
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PedidoCompra'
+
+
+  /pedidos/{pedidoId}:
+    get:
+      summary: Consultar pedido de compra
+      description: >
+        Devuelve la información de un pedido,
+        sus repuestos y las cantidades solicitadas
+        y recibidas.
+
+      parameters:
+        - name: pedidoId
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+
+      responses:
+        '200':
+          description: Pedido encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PedidoCompra'
+
+        '404':
+          description: Pedido no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+
+  /pedidos/{pedidoId}/recepciones:
+    post:
+      summary: Registrar recepción de un repuesto
+      description: >
+        Registra el ingreso de repuestos correspondientes
+        a una orden de compra.
+        Verifica que el repuesto pertenezca al pedido
+        y que la cantidad no supere el saldo pendiente.
+        Actualiza el stock y registra su ubicación.
+
+      parameters:
+        - name: pedidoId
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecepcionRequest'
+
+      responses:
+        '201':
+          description: Stock recibido registrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecepcionResponse'
+
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+        '404':
+          description: Pedido o repuesto no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+        '409':
+          description: >
+            El repuesto no corresponde al pedido,
+            el pedido no admite la recepción
+            o la cantidad supera el saldo pendiente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+
+  schemas:
+    Maquina:
+      type: object
+
+      required:
+        - codigo
+        - tag
+        - nombre
+
+      properties:
+
+        codigo:
+          type: string
+          description: Código de activo o QR de la máquina.
+          examples:
+            - QR-BOSH-8831
+
+        tag:
+          type: string
+          description: Identificación manual de la máquina.
+          examples:
+            - BLIST-04-ENV
+
+        nombre:
+          type: string
+          examples:
+            - Blistera Rotativa Bosch B-400
+
+        linea:
+          type: string
+          examples:
+            - Línea 2
+
+        area:
+          type: string
+          examples:
+            - Envasado Secundario
+
+    NuevaIncidencia:
+      type: object
+
+      required:
+        - codigoMaquina
+        - descripcion
+
+      properties:
+
+        codigoMaquina:
+          type: string
+          description: Código de activo de la máquina.
+          examples:
+            - QR-BOSH-8831
+
+        descripcion:
+          type: string
+          minLength: 1
+          maxLength: 250
+          examples:
+            - Se detecta una falla durante el funcionamiento.
+
+        fotos:
+          type: array
+          maxItems: 3
+          description: >
+            Referencias a las fotografías asociadas
+            a la incidencia. Para M2 se representan
+            mediante cadenas de texto en el mock.
+          items:
+            type: string
+          examples:
+            - ["foto-falla-01.jpg"]
+
+    Incidencia:
+      type: object
+
+      required:
+        - id
+        - codigo
+        - codigoMaquina
+        - descripcion
+        - estado
+        - turno
+        - fechaHora
+
+      properties:
+
+        id:
+          type: integer
+          minimum: 1
+          examples:
+            - 2049
+
+        codigo:
+          type: string
+          description: Código visible de la incidencia.
+          examples:
+            - INC-2049
+
+        codigoMaquina:
+          type: string
+          examples:
+            - QR-BOSH-8831
+
+        descripcion:
+          type: string
+          maxLength: 250
+
+        estado:
+          type: string
+          examples:
+            - reportada
+
+        turno:
+          type: string
+          enum:
+            - mañana
+            - tarde
+            - noche
+          examples:
+            - tarde
+
+        fechaHora:
+          type: string
+          format: date-time
+          examples:
+            - "2026-10-08T14:18:00-03:00"
+
+    Ubicacion:
+      type: object
+
+      required:
+        - codigo
+
+      properties:
+
+        codigo:
+          type: string
+          examples:
+            - A-03-12
+
+        descripcion:
+          type: string
+          examples:
+            - Pasillo A, Estantería 03, Nivel 12
+
+    Repuesto:
+      type: object
+
+      required:
+        - codigo
+        - nombre
+        - stockFisico
+        - stockReservado
+        - stockDisponible
+        - umbralMinimo
+
+      properties:
+
+        codigo:
+          type: string
+          examples:
+            - REP-VALV-304
+
+        nombre:
+          type: string
+          examples:
+            - Válvula Solenoide Festo 24V DC 5/2
+
+        lote:
+          type: string
+          description: Identificación del lote del repuesto.
+          examples:
+            - FES-992B
+
+        stockFisico:
+          type: integer
+          minimum: 0
+          examples:
+            - 3
+
+        stockReservado:
+          type: integer
+          minimum: 0
+          examples:
+            - 0
+
+        stockDisponible:
+          type: integer
+          minimum: 0
+          examples:
+            - 3
+
+        umbralMinimo:
+          type: integer
+          minimum: 0
+          examples:
+            - 2
+
+        ubicacion:
+          description: >
+            Ubicación actual registrada para el repuesto.
+          $ref: '#/components/schemas/Ubicacion'
+
+    Reparacion:
+      type: object
+
+      required:
+        - id
+        - incidenciaId
+        - codigoIncidencia
+        - codigoMaquina
+        - estado
+
+      properties:
+
+        id:
+          type: integer
+          minimum: 1
+          examples:
+            - 2049
+
+        incidenciaId:
+          type: integer
+          minimum: 1
+          examples:
+            - 2049
+
+        codigoIncidencia:
+          type: string
+          description: Código visible de la incidencia asociada.
+          examples:
+            - INC-2049
+
+        codigoMaquina:
+          type: string
+          examples:
+            - QR-BOSH-8831
+
+        estado:
+          type: string
+          examples:
+            - en_reparacion
+
+    UsoRepuestoRequest:
+      type: object
+
+      required:
+        - codigoRepuesto
+        - cantidad
+
+      properties:
+
+        codigoRepuesto:
+          type: string
+          examples:
+            - REP-VALV-304
+
+        cantidad:
+          type: integer
+          minimum: 1
+          examples:
+            - 2
+
+    UsoRepuestoResponse:
+      type: object
+
+      required:
+        - reparacionId
+        - codigoRepuesto
+        - cantidad
+        - stockFisico
+        - stockDisponible
+        - alertaUmbral
+
+      properties:
+
+        reparacionId:
+          type: integer
+          minimum: 1
+          examples:
+            - 2049
+
+        codigoRepuesto:
+          type: string
+          examples:
+            - REP-VALV-304
+
+        cantidad:
+          type: integer
+          minimum: 1
+          examples:
+            - 2
+
+        stockFisico:
+          type: integer
+          minimum: 0
+          examples:
+            - 1
+
+        stockDisponible:
+          type: integer
+          minimum: 0
+          examples:
+            - 1
+
+        alertaUmbral:
+          type: boolean
+          description: >
+            Indica si luego del uso el stock disponible
+            alcanzó o quedó por debajo del umbral mínimo.
+          examples:
+            - true
+
+    PedidoItem:
+      type: object
+
+      required:
+        - codigoRepuesto
+        - nombre
+        - cantidadSolicitada
+        - cantidadRecibida
+
+      properties:
+
+        codigoRepuesto:
+          type: string
+          examples:
+            - REP-VALV-304
+
+        nombre:
+          type: string
+          examples:
+            - Válvula Solenoide Festo 24V DC 5/2
+
+        cantidadSolicitada:
+          type: integer
+          minimum: 1
+          examples:
+            - 10
+
+        cantidadRecibida:
+          type: integer
+          minimum: 0
+          examples:
+            - 0
+
+    PedidoCompra:
+      type: object
+
+      required:
+        - id
+        - codigo
+        - estado
+        - items
+
+      properties:
+
+        id:
+          type: integer
+          minimum: 1
+          examples:
+            - 8841
+
+        codigo:
+          type: string
+          description: Código visible de la orden de compra.
+          examples:
+            - OC-2024-8841
+
+        estado:
+          type: string
+          description: Estado actual del pedido de compra.
+          examples:
+            - pendiente
+
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PedidoItem'
+
+    RecepcionRequest:
+      type: object
+
+      required:
+        - codigoRepuesto
+        - cantidadRecibida
+        - ubicacion
+
+      properties:
+
+        codigoRepuesto:
+          type: string
+          examples:
+            - REP-VALV-304
+
+        cantidadRecibida:
+          type: integer
+          minimum: 1
+          examples:
+            - 10
+
+        ubicacion:
+          $ref: '#/components/schemas/Ubicacion'
+
+    RecepcionResponse:
+      type: object
+
+      required:
+        - pedidoId
+        - cantidadRecibida
+        - repuesto
+
+      properties:
+
+        pedidoId:
+          type: integer
+          minimum: 1
+          examples:
+            - 8841
+
+        cantidadRecibida:
+          type: integer
+          minimum: 1
+          examples:
+            - 10
+
+        repuesto:
+          $ref: '#/components/schemas/Repuesto'
+
+    Error:
+      type: object
+
+      required:
+        - mensaje
+
+      properties:
+
+        mensaje:
+          type: string
+          examples:
+            - Recurso no encontrado

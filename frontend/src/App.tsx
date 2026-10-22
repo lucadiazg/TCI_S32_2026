@@ -1,9 +1,13 @@
 import { useState } from 'react'
 import './App.css'
+import CargarStockRecibido from './pages/CargarStockRecibido'
 
 function App() {
   const [codigoMaquina, setCodigoMaquina] = useState('')
   const [descripcion, setDescripcion] = useState('')
+ if (window.location.pathname === '/recepcion') {
+    return <CargarStockRecibido />
+  }
 
   return (
     <main>

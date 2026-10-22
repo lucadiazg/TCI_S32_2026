@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+:root {
+  font-family: Arial, sans-serif;
+  color: #242424;
+  background-color: #ffffff;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+}
+
+#root {
+  width: 100%;
+}
+
+@theme {
+  --color-primary: #006194;
+  --color-primary-container: #007bb9;
+  --color-on-primary: #ffffff;
+
+  --color-surface: #f8f9ff;
+  --color-surface-container: #e5eeff;
+  --color-surface-container-low: #eff4ff;
+  --color-surface-container-high: #dce9ff;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-variant: #d3e4fe;
+
+  --color-on-surface: #0b1c30;
+  --color-on-surface-variant: #3f4850;
+  --color-secondary: #565e74;
+  --color-outline: #707881;
+  --color-error: #ba1a1a;
+
+  --font-body-md: "Inter", sans-serif;
+  --font-headline-md: "Inter", sans-serif;
+  --font-label-sm: "JetBrains Mono", monospace;
+
+  --spacing-space-xs: 0.25rem;
+  --spacing-space-sm: 0.5rem;
+  --spacing-space-md: 1rem;
+  --spacing-space-lg: 1.5rem;
+  --spacing-space-xl: 2.5rem;
+  --spacing-margin: 1rem;
+
+  --font-headline-lg: "Inter", sans-serif;
+  --font-headline-xl: "Inter", sans-serif;
+  --font-label-md: "JetBrains Mono", monospace;
+  --font-body-sm: "Inter", sans-serif;
+
+  --text-headline-lg: 24px;
+  --text-headline-xl: 32px;
+  --text-headline-md: 20px;
+  --text-body-md: 16px;
+  --text-body-sm: 14px;
+  --text-label-md: 13px;
+  --text-label-sm: 11px;
+}

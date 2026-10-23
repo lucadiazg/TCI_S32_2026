@@ -1,6 +1,6 @@
 services:
   prism:
-    image: stoplight/prism:5
+    image: stoplight/prism:5.14.3
     container_name: pharmaplant-prism
     command: mock -h 0.0.0.0 /tmp/openapi.yaml
     ports:

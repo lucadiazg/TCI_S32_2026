@@ -1,6 +1,7 @@
 
 from fastapi import FastAPI
 from app.controllers.auth import router as auth_router
+from app.controllers.recepciones import router as recepciones_router
 
 app = FastAPI(
     title="PharmaPlant CORE API",
@@ -9,6 +10,9 @@ app = FastAPI(
 
 # Incorporamos las rutas de autenticación
 app.include_router(auth_router)
+
+# Incorporamos las rutas de recepción de repuestos
+app.include_router(recepciones_router)
 
 
 @app.get("/api/health")

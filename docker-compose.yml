@@ -1,9 +1,27 @@
-services:
+services: #definir servicios
   prism:
     image: stoplight/prism:5.14.3
     container_name: pharmaplant-prism
     command: mock -h 0.0.0.0 /tmp/openapi.yaml
-    ports:
+    ports: #puerto computadora: puerto contenedor
       - "4010:4010"
     volumes:
       - ./docs/spec/openapi.yaml:/tmp/openapi.yaml:ro
+  postgres: #software de la base de datos
+    image: postgres:16-alpine
+    environment: #varaibles de entorno (valores que necesita el programa para funcionar)
+      POSTGRES_DB: pharmaplant
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Definir POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pharmaplant_postgres_data:/var/lib/postgresql/data
+    healthcheck: #comprueba si postgreSQL esta listo para recibir conexiones
+      test: ["CMD-SHELL", "pg_isready -U postgres -d pharmaplant"]
+      interval: 5s
+      timeout: 5s
+      retries: 10 #despues de 10 fallos consecutivos docker marca el contenedor como unhealthy
+
+volumes: #declaracion de volumenes
+  pharmaplant_postgres_data:

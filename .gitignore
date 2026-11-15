@@ -1,0 +1,13 @@
+#Variables de entorno y contraseñas. guarda contrasenas y configuraciones de postgreSQL
+.env
+
+#contiene el entorno virtual de Python
+.venv/
+venv/
+
+#Guarda archivos temporales de Python
+__pycache__/
+*.pyc
+
+#Configuraciones locales de VS Code
+.vscode/

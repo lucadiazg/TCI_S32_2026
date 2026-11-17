@@ -1,40 +1,61 @@
+
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 
-// Tipos basados en el contrato OpenAPI de M2
 type Maquina = {
   codigo: string
   tag: string
   nombre: string
-  linea?: string
-  area?: string
+  linea?: string | null
+  area?: string | null
+  estado?: string | null
 }
 
+type Turno = 'mañana' | 'tarde' | 'noche'
+
 type NuevaIncidencia = {
-  codigoMaquina: string
+  codigo_maquina: string
   descripcion: string
-  fotos?: string[]
+  turno: Turno
 }
 
 type Incidencia = {
   id: number
-  codigo: string
-  codigoMaquina: string
+  codigo: string | null
+  codigo_maquina: string
   descripcion: string
   estado: string
-  turno: 'mañana' | 'tarde' | 'noche'
-  fechaHora: string
+  turno: Turno
+  fotos: string[]
+  fecha_hora: string
 }
 
 type ErrorApi = {
+  detail?: string | Array<{ msg?: string }>
   mensaje?: string
 }
 
-const API_URL = 'http://127.0.0.1:4010'
+const API_URL =
+  import.meta.env.VITE_API_URL ?? 'http://localhost:8001'
+
+function obtenerMensajeError(datos: ErrorApi, mensaje: string): string {
+  if (typeof datos.detail === 'string') {
+    return datos.detail
+  }
+
+  if (Array.isArray(datos.detail)) {
+    return datos.detail
+      .map((error) => error.msg ?? 'Error de validación')
+      .join('. ')
+  }
+
+  return datos.mensaje ?? mensaje
+}
 
 export default function ReportarIncidencia() {
   const [codigoMaquina, setCodigoMaquina] = useState('')
   const [descripcion, setDescripcion] = useState('')
+  const [turno, setTurno] = useState<Turno>('mañana')
   const [maquina, setMaquina] = useState<Maquina | null>(null)
   const [fotos, setFotos] = useState<File[]>([])
 
@@ -43,7 +64,6 @@ export default function ReportarIncidencia() {
   const [error, setError] = useState('')
   const [resultado, setResultado] = useState<Incidencia | null>(null)
 
-  // GET /maquinas/{codigo}
   async function consultarMaquina() {
     const codigo = codigoMaquina.trim()
 
@@ -59,13 +79,17 @@ export default function ReportarIncidencia() {
 
     try {
       const respuesta = await fetch(
-        `${API_URL}/maquinas/${encodeURIComponent(codigo)}`
+        `${API_URL}/api/maquinas/${encodeURIComponent(codigo)}`
       )
 
       if (!respuesta.ok) {
         const datos: ErrorApi = await respuesta.json().catch(() => ({}))
+
         throw new Error(
-          datos.mensaje || 'No se pudo identificar la máquina.'
+          obtenerMensajeError(
+            datos,
+            'No se pudo identificar la máquina.'
+          )
         )
       }
 
@@ -75,7 +99,7 @@ export default function ReportarIncidencia() {
       setError(
         errorDesconocido instanceof Error
           ? errorDesconocido.message
-          : 'No se pudo conectar con Prism.'
+          : 'No se pudo conectar con FastAPI.'
       )
     } finally {
       setConsultando(false)
@@ -88,7 +112,7 @@ export default function ReportarIncidencia() {
     const seleccionadas = Array.from(archivos)
 
     if (seleccionadas.length > 3) {
-      setError('Podés adjuntar hasta 3 fotografías.')
+      setError('Podés seleccionar hasta 3 fotografías.')
       setFotos([])
       return
     }
@@ -97,7 +121,6 @@ export default function ReportarIncidencia() {
     setError('')
   }
 
-  // POST /incidencias
   async function reportarIncidencia(
     evento: FormEvent<HTMLFormElement>
   ) {
@@ -110,15 +133,15 @@ export default function ReportarIncidencia() {
       return
     }
 
-    if (!descripcion.trim()) {
-      setError('Ingresá una descripción de la falla.')
+    if (descripcion.trim().length < 5) {
+      setError('La descripción debe tener al menos 5 caracteres.')
       return
     }
 
     const nuevaIncidencia: NuevaIncidencia = {
-      codigoMaquina: maquina.codigo,
+      codigo_maquina: maquina.codigo,
       descripcion: descripcion.trim(),
-      fotos: fotos.map((foto) => foto.name),
+      turno,
     }
 
     setEnviando(true)
@@ -126,7 +149,7 @@ export default function ReportarIncidencia() {
     setResultado(null)
 
     try {
-      const respuesta = await fetch(`${API_URL}/incidencias`, {
+      const respuesta = await fetch(`${API_URL}/api/incidencias/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -136,13 +159,20 @@ export default function ReportarIncidencia() {
 
       if (!respuesta.ok) {
         const datos: ErrorApi = await respuesta.json().catch(() => ({}))
+
         throw new Error(
-          datos.mensaje || 'No se pudo registrar la incidencia.'
+          obtenerMensajeError(
+            datos,
+            'No se pudo registrar la incidencia.'
+          )
         )
       }
 
       const datos: Incidencia = await respuesta.json()
+
       setResultado(datos)
+      setDescripcion('')
+      setFotos([])
     } catch (errorDesconocido) {
       setError(
         errorDesconocido instanceof Error
@@ -185,7 +215,7 @@ export default function ReportarIncidencia() {
               htmlFor="maquina"
               className="mb-2 block font-semibold"
             >
-              Código QR o tag de máquina
+              Código QR o código de máquina
             </label>
 
             <input
@@ -197,7 +227,7 @@ export default function ReportarIncidencia() {
                 setMaquina(null)
                 setResultado(null)
               }}
-              placeholder="Ejemplo: QR-BOSH-8831"
+              placeholder="Ejemplo: MAQ-001"
               className="w-full rounded-lg border border-slate-300 bg-slate-50 p-3"
               required
             />
@@ -241,12 +271,18 @@ export default function ReportarIncidencia() {
                   <p className="mt-1 text-sm text-slate-500">
                     Tag: {maquina.tag}
                   </p>
+
+                  {maquina.estado && (
+                    <p className="mt-1 text-sm text-slate-500">
+                      Estado: {maquina.estado}
+                    </p>
+                  )}
                 </div>
               </div>
             )}
           </section>
 
-          {/* Descripción de la falla */}
+          {/* Descripción */}
           <section className="rounded-xl bg-white p-6 shadow-sm">
             <div className="mb-4 flex items-center justify-between gap-3">
               <h2 className="text-lg font-bold">
@@ -271,11 +307,40 @@ export default function ReportarIncidencia() {
               onChange={(evento) =>
                 setDescripcion(evento.target.value)
               }
+              minLength={5}
               maxLength={250}
               placeholder="Ej.: La máquina no enciende..."
               className="min-h-36 w-full rounded-lg border border-slate-300 bg-blue-50 p-3"
               required
             />
+          </section>
+
+          {/* Turno */}
+          <section className="rounded-xl bg-white p-6 shadow-sm">
+            <h2 className="mb-4 text-lg font-bold">
+              TURNO DE TRABAJO
+            </h2>
+
+            <label
+              htmlFor="turno"
+              className="mb-2 block font-medium"
+            >
+              Seleccioná el turno en el que se detectó la falla
+            </label>
+
+            <select
+              id="turno"
+              value={turno}
+              onChange={(evento) =>
+                setTurno(evento.target.value as Turno)
+              }
+              className="w-full rounded-lg border border-slate-300 bg-slate-50 p-3"
+              required
+            >
+              <option value="mañana">Mañana</option>
+              <option value="tarde">Tarde</option>
+              <option value="noche">Noche</option>
+            </select>
           </section>
 
           {/* Fotografías */}
@@ -307,7 +372,7 @@ export default function ReportarIncidencia() {
                   evento.target.files &&
                   evento.target.files.length > 3
                 ) {
-                  setError('Podés adjuntar hasta 3 fotografías.')
+                  setError('Podés seleccionar hasta 3 fotografías.')
                   setFotos([])
                   evento.target.value = ''
                   return
@@ -321,29 +386,33 @@ export default function ReportarIncidencia() {
             {fotos.length > 0 && (
               <div className="mt-3 rounded-lg bg-slate-50 p-3">
                 {fotos.map((foto, indice) => (
-                  <p key={`${foto.name}-${indice}`} className="text-sm">
-                    📷 {foto.name}
+                  <p
+                    key={`${foto.name}-${indice}`}
+                    className="text-sm"
+                  >
+                    {foto.name}
                   </p>
                 ))}
               </div>
             )}
 
             <p className="mt-3 text-xs text-slate-500">
-              Durante M3 se envían los nombres de los archivos
-              como referencias, según el contrato OpenAPI.
-              Las imágenes todavía no se suben al servidor.
+              La carga de fotografías al servidor todavía no está
+              implementada. Los archivos seleccionados no se envían
+              ni se guardan con la incidencia.
             </p>
           </section>
 
-          {/* Información del registro */}
+          {/* Información */}
           <section className="rounded-xl border border-blue-200 bg-blue-50 p-5">
             <h2 className="font-bold text-sky-800">
               INFORMACIÓN DEL REPORTE
             </h2>
 
             <p className="mt-2 text-sm text-slate-600">
-              El turno, la fecha y la hora serán informados
-              por la respuesta del servidor.
+              La incidencia se guardará en PostgreSQL.
+              El identificador, estado y fecha serán devueltos
+              por FastAPI.
             </p>
           </section>
 
@@ -362,37 +431,43 @@ export default function ReportarIncidencia() {
             className="w-full rounded-lg bg-sky-700 px-5 py-4 text-lg font-bold text-white shadow-md hover:bg-sky-800 disabled:bg-slate-400"
           >
             {enviando
-              ? 'Enviando incidencia...'
+              ? 'Guardando incidencia...'
               : '✓ Reportar incidencia'}
           </button>
         </form>
 
-        {/* Resultado simulado de Prism */}
+        {/* Resultado real */}
         {resultado && (
           <section
             role="status"
             className="rounded-xl border border-green-200 bg-white p-6 shadow-sm"
           >
             <h2 className="text-xl font-bold text-green-700">
-              ✓ Solicitud aceptada por Prism
+              ✓ Incidencia registrada correctamente
             </h2>
 
-            <p className="mt-2 text-sm text-slate-500">
-              Resultado simulado: todavía no se guarda
-              en una base de datos real.
+            <p className="mt-2 text-sm text-slate-600">
+              La incidencia fue guardada en PostgreSQL
+              mediante FastAPI.
             </p>
 
             <div className="mt-4 space-y-2">
               <p>
-                <strong>Incidencia:</strong> {resultado.codigo}
+                <strong>ID:</strong> {resultado.id}
               </p>
+
+              {resultado.codigo && (
+                <p>
+                  <strong>Código:</strong> {resultado.codigo}
+                </p>
+              )}
 
               <p>
                 <strong>Estado:</strong> {resultado.estado}
               </p>
 
               <p>
-                <strong>Máquina:</strong> {resultado.codigoMaquina}
+                <strong>Máquina:</strong> {resultado.codigo_maquina}
               </p>
 
               <p>
@@ -400,7 +475,18 @@ export default function ReportarIncidencia() {
               </p>
 
               <p>
-                <strong>Fecha y hora:</strong> {resultado.fechaHora}
+                <strong>Descripción:</strong> {resultado.descripcion}
+              </p>
+
+              <p>
+                <strong>Fecha y hora:</strong>{' '}
+                {new Date(resultado.fecha_hora).toLocaleString(
+                  'es-AR',
+                  {
+                    dateStyle: 'short',
+                    timeStyle: 'medium',
+                  }
+                )}
               </p>
             </div>
           </section>

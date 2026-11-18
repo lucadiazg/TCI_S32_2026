@@ -1,13 +1,33 @@
-#Variables de entorno y contraseñas. guarda contrasenas y configuraciones de postgreSQL
+# Variables de entorno y contraseñas
 .env
+.env.*
+**/.env
+**/.env.*
 
-#contiene el entorno virtual de Python
+# Permitir archivos de ejemplo
+!.env.example
+!**/.env.example
+
+# Entornos virtuales de Python
 .venv/
 venv/
 
-#Guarda archivos temporales de Python
+# Archivos temporales de Python
 __pycache__/
 *.pyc
+.pytest_cache/
 
-#Configuraciones locales de VS Code
+# Dependencias de Node.js
+node_modules/
+**/node_modules/
+
+# Archivos generados por el frontend
+dist/
+**/dist/
+
+# Configuraciones locales de VS Code
 .vscode/
+
+# Archivos temporales del sistema
+.DS_Store
+Thumbs.db

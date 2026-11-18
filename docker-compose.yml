@@ -1,27 +1,56 @@
-services: #definir servicios
+
+services:
   prism:
     image: stoplight/prism:5.14.3
     container_name: pharmaplant-prism
     command: mock -h 0.0.0.0 /tmp/openapi.yaml
-    ports: #puerto computadora: puerto contenedor
+    ports:
       - "4010:4010"
     volumes:
       - ./docs/spec/openapi.yaml:/tmp/openapi.yaml:ro
-  postgres: #software de la base de datos
+
+  postgres:
     image: postgres:16-alpine
-    environment: #varaibles de entorno (valores que necesita el programa para funcionar)
+    environment:
       POSTGRES_DB: pharmaplant
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Definir POSTGRES_PASSWORD}
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - pharmaplant_postgres_data:/var/lib/postgresql/data
-    healthcheck: #comprueba si postgreSQL esta listo para recibir conexiones
+    healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d pharmaplant"]
       interval: 5s
       timeout: 5s
-      retries: 10 #despues de 10 fallos consecutivos docker marca el contenedor como unhealthy
+      retries: 10
 
-volumes: #declaracion de volumenes
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8000"
+    environment:
+      DATABASE_URL: postgresql+psycopg2://postgres:${POSTGRES_PASSWORD}@postgres:5432/pharmaplant
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:?Definir JWT_SECRET_KEY}
+      JWT_ALGORITHM: HS256
+      JWT_EXPIRE_MINUTES: "60"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5176:5173"
+    environment:
+      VITE_API_URL: http://localhost:8001
+      VITE_PRISM_STATUS: ""
+    depends_on:
+      - backend
+
+volumes:
   pharmaplant_postgres_data:

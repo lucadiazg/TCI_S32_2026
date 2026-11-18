@@ -1,10 +1,15 @@
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlmodel import Session, select
 from pydantic import BaseModel, Field, field_validator
-from app.models.mantenimiento import Incidencia, Maquina
+from sqlmodel import Session, select
 
+from app.auth_dependencies import (
+    obtener_usuario_actual,
+    requiere_roles,
+)
 from app.database import get_session
+from app.models.mantenimiento import Incidencia, Maquina
+from app.models.usuario import RolUsuario, Usuario
 
 
 router = APIRouter(
@@ -13,16 +18,9 @@ router = APIRouter(
 )
 
 
-@router.get("/")
-def listar_incidencias(
-    session: Session = Depends(get_session)
-):
-    incidencias = session.exec(
-        select(Incidencia)
-    ).all()
-
-    return incidencias
-
+# --------------------------------------------------
+# MODELOS DE ENTRADA
+# --------------------------------------------------
 
 class IncidenciaCrear(BaseModel):
     codigo_maquina: str = Field(min_length=1)
@@ -52,14 +50,48 @@ class IncidenciaCrear(BaseModel):
         return valor
 
 
+class IncidenciaActualizarEstado(BaseModel):
+    estado: str
+
+
+# --------------------------------------------------
+# CONSULTAR INCIDENCIAS
+# --------------------------------------------------
+
+@router.get("/")
+def listar_incidencias(
+    session: Session = Depends(get_session),
+    usuario: Usuario = Depends(obtener_usuario_actual)
+):
+    consulta = select(Incidencia)
+
+    # Los operarios solamente ven sus incidencias.
+    # Los demás roles pueden consultar todas.
+    if usuario.rol == RolUsuario.OPERARIO:
+        consulta = consulta.where(
+            Incidencia.usuario_reportante_id == usuario.id
+        )
+
+    return session.exec(consulta).all()
+
+
+# --------------------------------------------------
+# REPORTAR INCIDENCIA - OPERARIO
+# --------------------------------------------------
 
 @router.post("/", status_code=201)
 def crear_incidencia(
     datos: IncidenciaCrear,
-    session: Session = Depends(get_session)
+    session: Session = Depends(get_session),
+    usuario: Usuario = Depends(
+        requiere_roles(RolUsuario.OPERARIO)
+    )
 ):
-    # Primero verificamos que la máquina exista
-    maquina = session.get(Maquina, datos.codigo_maquina)
+    # Verificar que la máquina exista
+    maquina = session.get(
+        Maquina,
+        datos.codigo_maquina
+    )
 
     if maquina is None:
         raise HTTPException(
@@ -67,11 +99,12 @@ def crear_incidencia(
             detail="La máquina indicada no existe"
         )
 
-    # Si existe, creamos la incidencia
+    # Registrar automáticamente al usuario autenticado
     nueva_incidencia = Incidencia(
         codigo_maquina=datos.codigo_maquina,
         descripcion=datos.descripcion,
-        turno=datos.turno
+        turno=datos.turno,
+        usuario_reportante_id=usuario.id
     )
 
     session.add(nueva_incidencia)
@@ -81,12 +114,20 @@ def crear_incidencia(
     return nueva_incidencia
 
 
+# --------------------------------------------------
+# CONSULTAR UNA INCIDENCIA
+# --------------------------------------------------
+
 @router.get("/{incidencia_id}")
 def obtener_incidencia(
     incidencia_id: int,
-    session: Session = Depends(get_session)
+    session: Session = Depends(get_session),
+    usuario: Usuario = Depends(obtener_usuario_actual)
 ):
-    incidencia = session.get(Incidencia, incidencia_id)
+    incidencia = session.get(
+        Incidencia,
+        incidencia_id
+    )
 
     if incidencia is None:
         raise HTTPException(
@@ -94,19 +135,36 @@ def obtener_incidencia(
             detail="La incidencia no existe"
         )
 
+    # Un operario no puede consultar incidencias ajenas
+    if (
+        usuario.rol == RolUsuario.OPERARIO
+        and incidencia.usuario_reportante_id != usuario.id
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="No tenés permiso para consultar esta incidencia"
+        )
+
     return incidencia
 
-class IncidenciaActualizarEstado(BaseModel):
-    estado: str
 
+# --------------------------------------------------
+# ACTUALIZAR ESTADO - MANTENIMIENTO
+# --------------------------------------------------
 
 @router.patch("/{incidencia_id}/estado")
 def actualizar_estado_incidencia(
     incidencia_id: int,
     datos: IncidenciaActualizarEstado,
-    session: Session = Depends(get_session)
+    session: Session = Depends(get_session),
+    usuario: Usuario = Depends(
+        requiere_roles(RolUsuario.MANTENIMIENTO)
+    )
 ):
-    incidencia = session.get(Incidencia, incidencia_id)
+    incidencia = session.get(
+        Incidencia,
+        incidencia_id
+    )
 
     if incidencia is None:
         raise HTTPException(

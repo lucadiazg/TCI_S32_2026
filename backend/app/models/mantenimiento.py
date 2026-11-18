@@ -23,6 +23,13 @@ class Incidencia(SQLModel, table=True):
     codigo: str | None = Field(default=None, unique=True)
 
     codigo_maquina: str = Field(foreign_key="maquinas.codigo")
+
+    # Empleado que reportó la incidencia
+    usuario_reportante_id: int | None = Field(
+        default=None,
+        foreign_key="usuarios.id"
+    )
+
     descripcion: str
     estado: str = "reportada"
     turno: str

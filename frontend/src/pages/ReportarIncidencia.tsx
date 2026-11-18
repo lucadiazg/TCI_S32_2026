@@ -1,6 +1,6 @@
 
-import { useState } from 'react'
-import type { FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
+import { obtenerToken } from '../services/authApi'
 
 type Maquina = {
   codigo: string
@@ -38,7 +38,11 @@ type ErrorApi = {
 const API_URL =
   import.meta.env.VITE_API_URL ?? 'http://localhost:8001'
 
-function obtenerMensajeError(datos: ErrorApi, mensaje: string): string {
+
+function obtenerMensajeError(
+  datos: ErrorApi,
+  mensaje: string
+): string {
   if (typeof datos.detail === 'string') {
     return datos.detail
   }
@@ -52,6 +56,7 @@ function obtenerMensajeError(datos: ErrorApi, mensaje: string): string {
   return datos.mensaje ?? mensaje
 }
 
+
 export default function ReportarIncidencia() {
   const [codigoMaquina, setCodigoMaquina] = useState('')
   const [descripcion, setDescripcion] = useState('')
@@ -64,6 +69,8 @@ export default function ReportarIncidencia() {
   const [error, setError] = useState('')
   const [resultado, setResultado] = useState<Incidencia | null>(null)
 
+
+  // Consultar máquina por código.
   async function consultarMaquina() {
     const codigo = codigoMaquina.trim()
 
@@ -83,7 +90,8 @@ export default function ReportarIncidencia() {
       )
 
       if (!respuesta.ok) {
-        const datos: ErrorApi = await respuesta.json().catch(() => ({}))
+        const datos: ErrorApi =
+          await respuesta.json().catch(() => ({}))
 
         throw new Error(
           obtenerMensajeError(
@@ -95,6 +103,7 @@ export default function ReportarIncidencia() {
 
       const datos: Maquina = await respuesta.json()
       setMaquina(datos)
+
     } catch (errorDesconocido) {
       setError(
         errorDesconocido instanceof Error
@@ -106,6 +115,8 @@ export default function ReportarIncidencia() {
     }
   }
 
+
+  // Seleccionar hasta tres fotografías.
   function seleccionarFotos(archivos: FileList | null) {
     if (!archivos) return
 
@@ -121,6 +132,8 @@ export default function ReportarIncidencia() {
     setError('')
   }
 
+
+  // Registrar incidencia autenticada.
   async function reportarIncidencia(
     evento: FormEvent<HTMLFormElement>
   ) {
@@ -149,16 +162,43 @@ export default function ReportarIncidencia() {
     setResultado(null)
 
     try {
-      const respuesta = await fetch(`${API_URL}/api/incidencias/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(nuevaIncidencia),
-      })
+      // Recuperar el JWT guardado durante el login.
+      const token = obtenerToken()
+
+      if (!token) {
+        throw new Error(
+          'Tu sesión no está activa. Cerrá sesión y volvé a ingresar.'
+        )
+      }
+
+      // Enviar la incidencia con autorización Bearer.
+      const respuesta = await fetch(
+        `${API_URL}/api/incidencias/`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(nuevaIncidencia),
+        }
+      )
 
       if (!respuesta.ok) {
-        const datos: ErrorApi = await respuesta.json().catch(() => ({}))
+        if (respuesta.status === 401) {
+          throw new Error(
+            'Tu sesión venció o no es válida. Cerrá sesión y volvé a ingresar.'
+          )
+        }
+
+        if (respuesta.status === 403) {
+          throw new Error(
+            'Tu usuario no tiene permiso para reportar incidencias.'
+          )
+        }
+
+        const datos: ErrorApi =
+          await respuesta.json().catch(() => ({}))
 
         throw new Error(
           obtenerMensajeError(
@@ -168,11 +208,13 @@ export default function ReportarIncidencia() {
         )
       }
 
+      // Obtener la incidencia creada por FastAPI.
       const datos: Incidencia = await respuesta.json()
 
       setResultado(datos)
       setDescripcion('')
       setFotos([])
+
     } catch (errorDesconocido) {
       setError(
         errorDesconocido instanceof Error
@@ -183,6 +225,7 @@ export default function ReportarIncidencia() {
       setEnviando(false)
     }
   }
+
 
   return (
     <main className="min-h-screen bg-slate-100 px-4 py-8 text-slate-900">
@@ -203,7 +246,10 @@ export default function ReportarIncidencia() {
           </p>
         </header>
 
-        <form onSubmit={reportarIncidencia} className="space-y-5">
+        <form
+          onSubmit={reportarIncidencia}
+          className="space-y-5"
+        >
 
           {/* Identificación de máquina */}
           <section className="rounded-xl bg-white p-6 shadow-sm">
@@ -416,6 +462,7 @@ export default function ReportarIncidencia() {
             </p>
           </section>
 
+          {/* Mensaje de error */}
           {error && (
             <div
               role="alert"
@@ -436,7 +483,7 @@ export default function ReportarIncidencia() {
           </button>
         </form>
 
-        {/* Resultado real */}
+        {/* Confirmación de registro */}
         {resultado && (
           <section
             role="status"

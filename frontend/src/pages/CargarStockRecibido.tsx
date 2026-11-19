@@ -136,32 +136,31 @@ setExito(
     : 0
 
   return (
-    <main className="min-h-screen bg-slate-100 px-4 py-8 text-slate-900">
-      <section className="mx-auto max-w-3xl">
-        <header className="mb-6">
-          <p className="text-sm font-semibold text-blue-600">
-            PharmaStock
+    <main className="min-h-screen bg-surface px-3 py-6 text-on-surface sm:px-6 sm:py-8">
+      <div className="mx-auto max-w-5xl space-y-5">
+        <header className="rounded-xl border border-[#D5E2EF] border-l-4 border-l-primary bg-white p-5 shadow-sm sm:p-6">
+          <p className="text-sm font-bold uppercase tracking-wide text-primary">
+            Encargado · Recepción de repuestos
           </p>
 
-          <h1 className="text-3xl font-bold">
+          <h1 className="mt-2 text-2xl font-bold text-on-surface sm:text-3xl">
             Cargar stock recibido
           </h1>
 
-          <p className="mt-2 text-slate-600">
-            Registrá los repuestos recibidos de una orden de
-            compra.
+          <p className="mt-2 text-base text-on-surface-variant">
+            Identificá la orden, seleccioná el repuesto y registrá las unidades recibidas.
           </p>
         </header>
 
-        <div className="rounded-xl bg-white p-6 shadow-sm">
+        <div className="space-y-5">
           {error && (
-            <div className="mb-5 rounded-lg border border-red-300 bg-red-50 p-4 text-red-700">
+            <div role="alert" className="rounded-lg border border-red-300 bg-red-50 p-4 font-medium text-red-800">
               {error}
             </div>
           )}
 
           {exito && (
-            <div className="mb-5 rounded-lg border border-green-300 bg-green-50 p-4 text-green-700">
+            <div role="status" className="rounded-lg border border-green-300 bg-green-50 p-4 font-medium text-green-900">
               {exito}
             </div>
           )}
@@ -170,12 +169,15 @@ setExito(
             className="space-y-5"
             onSubmit={enviarFormulario}
           >
-            <div>
+            <section className="rounded-xl bg-white p-5 shadow-sm sm:p-6">
+              <h2 className="mb-5 text-lg font-bold text-on-surface">
+                ORDEN DE COMPRA
+              </h2>
               <label
-                className="mb-2 block font-medium"
+                className="mb-2 block text-base font-semibold"
                 htmlFor="pedido"
               >
-                Orden de compra
+                ID de orden de compra
               </label>
 
               <input
@@ -183,7 +185,7 @@ setExito(
                 type="number"
                 min="1"
                 step="1"
-                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                className="min-h-12 w-full rounded-lg border border-outline bg-surface-container-low px-4 py-3 text-base focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                 value={pedidoId}
                 onChange={(evento) => setPedidoId(evento.target.value)}
                 placeholder="Ingresá el ID de la orden. Ejemplo: 2"
@@ -193,27 +195,28 @@ setExito(
                 type="button"
                 onClick={() => cambiarPedido(pedidoId)}
                 disabled={cargando || !pedidoId || !Number.isSafeInteger(Number(pedidoId)) || Number(pedidoId) <= 0}
-                className="mt-3 rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white disabled:bg-slate-400"
+                className="mt-3 min-h-12 w-full rounded-lg bg-primary px-5 py-3 text-base font-bold text-white hover:bg-[#004B76] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:bg-slate-400 sm:w-auto"
               >
                 {cargando ? 'Buscando...' : 'Buscar orden'}
               </button>
-            </div>
 
-            {pedido && (
-              <div className="rounded-lg bg-slate-50 p-4">
-                <p>
-                  <strong>Orden:</strong> {pedido.codigo}
-                </p>
+              {pedido && (
+                <div className="mt-5 rounded-xl border border-[#B8D7EB] bg-surface-container-low p-4 sm:p-5">
+                  <p className="text-sm font-bold uppercase text-primary">ORDEN IDENTIFICADA</p>
+                  <p className="mt-2 break-words text-xl font-bold text-on-surface">{pedido.codigo}</p>
+                  <p className="mt-2 text-base text-on-surface-variant">
+                    <strong>Estado:</strong> {pedido.estado}
+                  </p>
+                </div>
+              )}
+            </section>
 
-                <p>
-                  <strong>Estado:</strong> {pedido.estado}
-                </p>
-              </div>
-            )}
-
-            <div>
+            <section className="rounded-xl bg-white p-5 shadow-sm sm:p-6">
+              <h2 className="mb-5 text-lg font-bold text-on-surface">
+                IDENTIFICACIÓN DEL REPUESTO
+              </h2>
               <label
-                className="mb-2 block font-medium"
+                className="mb-2 block text-base font-semibold"
                 htmlFor="repuesto"
               >
                 Repuesto
@@ -221,7 +224,7 @@ setExito(
 
               <select
                 id="repuesto"
-                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                className="min-h-12 w-full rounded-lg border border-outline bg-white px-4 py-3 text-base focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                 value={codigoRepuesto}
                 onChange={(evento) =>
                   setCodigoRepuesto(evento.target.value)
@@ -241,83 +244,96 @@ setExito(
                   </option>
                 ))}
               </select>
-            </div>
 
-            {repuestoSeleccionado && (
-              <div className="grid gap-3 rounded-lg border border-slate-200 p-4 sm:grid-cols-3">
-                <p>
-                  <span className="block text-sm text-slate-500">
-                    Solicitadas
-                  </span>
-                  <strong>
-                    {repuestoSeleccionado.cantidadSolicitada}
-                  </strong>
-                </p>
+              {repuestoSeleccionado && (
+                <div className="mt-5 rounded-xl bg-surface-container-low p-4 sm:p-5">
+                  <p className="text-sm font-bold text-primary">REPUESTO SELECCIONADO</p>
+                  <p className="mt-2 break-words text-xl font-bold">{repuestoSeleccionado.nombre}</p>
+                  <p className="mt-1 break-all font-mono text-base text-on-surface-variant">
+                    {repuestoSeleccionado.codigoRepuesto}
+                  </p>
+                  <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                    <div className="rounded-xl border border-[#D5E2EF] bg-white p-4">
+                      <p className="text-sm font-semibold text-on-surface-variant">Solicitadas</p>
+                      <p className="mt-2 text-2xl font-bold tabular-nums">
+                        {repuestoSeleccionado.cantidadSolicitada}
+                      </p>
+                    </div>
+                    <div className="rounded-xl border border-[#D5E2EF] bg-white p-4">
+                      <p className="text-sm font-semibold text-on-surface-variant">Ya recibidas</p>
+                      <p className="mt-2 text-2xl font-bold tabular-nums">
+                        {repuestoSeleccionado.cantidadRecibida}
+                      </p>
+                    </div>
+                    <div className="rounded-xl border border-[#B8D7EB] bg-white p-4">
+                      <p className="text-sm font-bold text-[#004B76]">PENDIENTES</p>
+                      <p className="mt-2 text-3xl font-extrabold tabular-nums">{cantidadPendiente}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </section>
 
-                <p>
-                  <span className="block text-sm text-slate-500">
-                    Ya recibidas
-                  </span>
-                  <strong>
-                    {repuestoSeleccionado.cantidadRecibida}
-                  </strong>
-                </p>
+            <section className="rounded-xl bg-white p-5 shadow-sm sm:p-6">
+              <h2 className="mb-5 text-lg font-bold text-on-surface">
+                CANTIDAD Y UBICACIÓN
+              </h2>
+              <div className="grid gap-5 md:grid-cols-2">
+                <div>
+                  <label
+                    className="mb-2 block text-base font-semibold"
+                    htmlFor="cantidad"
+                  >
+                    Cantidad recibida
+                  </label>
 
-                <p>
-                  <span className="block text-sm text-slate-500">
-                    Pendientes
-                  </span>
-                  <strong>{cantidadPendiente}</strong>
-                </p>
+                  <input
+                    id="cantidad"
+                    type="number"
+                    min="1"
+                    step="1"
+                    className="min-h-12 w-full rounded-lg border border-outline bg-surface-container-low px-4 py-3 text-base focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                    value={cantidadRecibida}
+                    onChange={(evento) =>
+                      setCantidadRecibida(evento.target.value)
+                    }
+                    placeholder="Ejemplo: 5"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    className="mb-2 block text-base font-semibold"
+                    htmlFor="ubicacion"
+                  >
+                    Código de ubicación
+                  </label>
+
+                  <input
+                    id="ubicacion"
+                    type="text"
+                    className="min-h-12 w-full rounded-lg border border-outline bg-surface-container-low px-4 py-3 text-base focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                    value={ubicacion}
+                    onChange={(evento) =>
+                      setUbicacion(evento.target.value)
+                    }
+                    placeholder="Ejemplo: A-01-03"
+                  />
+                </div>
               </div>
-            )}
 
-            <div>
-              <label
-                className="mb-2 block font-medium"
-                htmlFor="cantidad"
-              >
-                Cantidad recibida
-              </label>
-
-              <input
-                id="cantidad"
-                type="number"
-                min="1"
-                step="1"
-                className="w-full rounded-lg border border-slate-300 px-3 py-2"
-                value={cantidadRecibida}
-                onChange={(evento) =>
-                  setCantidadRecibida(evento.target.value)
-                }
-                placeholder="Ejemplo: 5"
-              />
-            </div>
-
-            <div>
-              <label
-                className="mb-2 block font-medium"
-                htmlFor="ubicacion"
-              >
-                Código de ubicación
-              </label>
-
-              <input
-                id="ubicacion"
-                type="text"
-                className="w-full rounded-lg border border-slate-300 px-3 py-2"
-                value={ubicacion}
-                onChange={(evento) =>
-                  setUbicacion(evento.target.value)
-                }
-                placeholder="Ejemplo: A-01-03"
-              />
-            </div>
+              {repuestoSeleccionado && (
+                <p className="mt-4 rounded-lg bg-surface-container-low p-3 text-base text-on-surface-variant">
+                  <strong>Pendiente de recibir:</strong> {cantidadPendiente} unidades.
+                  Verificá la cantidad y ubicación antes de confirmar.
+                </p>
+              )}
+            </section>
 
             <button
               type="submit"
               disabled={guardando || cargando}
-              className="w-full rounded-lg bg-blue-600 px-4 py-3 font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400"
+              className="min-h-14 w-full rounded-lg bg-primary px-5 py-3 text-lg font-bold text-white shadow-sm hover:bg-[#004B76] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:bg-slate-400"
             >
               {guardando
                 ? 'Registrando...'
@@ -325,7 +341,7 @@ setExito(
             </button>
           </form>
         </div>
-      </section>
+      </div>
     </main>
   )
 }

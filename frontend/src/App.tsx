@@ -11,6 +11,7 @@ import {
 import './App.css'
 
 import Login from './pages/Login'
+import MenuPrincipal from './pages/MenuPrincipal'
 import ReportarIncidencia from './pages/ReportarIncidencia'
 import CargarStockRecibido from './pages/CargarStockRecibido'
 import RegistrarUsoRepuesto from './pages/RegistrarUsoRepuesto'
@@ -179,15 +180,29 @@ function AppRoutes() {
 
   return (
     <Routes>
+      {/* MENÚ PRINCIPAL */}
+    <Route
+      path="/menu"
+      element={
+        usuario ? (
+          <Panel
+            usuario={usuario}
+            titulo="Menú principal"
+            onLogout={manejarLogout}
+          >
+            <MenuPrincipal rol={usuario.rol} />
+          </Panel>
+        ) : (
+          <Navigate to="/login" replace />
+        )
+      }
+    />
       {/* Login */}
       <Route
         path="/login"
         element={
           usuario ? (
-            <Navigate
-              to={obtenerRutaPorRol(usuario.rol)}
-              replace
-            />
+            <Navigate to="/menu" replace/>
           ) : (
             <Login onLogin={manejarLogin} />
           )
@@ -292,11 +307,7 @@ function AppRoutes() {
         path="*"
         element={
           <Navigate
-            to={
-              usuario
-                ? obtenerRutaPorRol(usuario.rol)
-                : '/login'
-            }
+            to={usuario ? '/menu' : '/login'}
             replace
           />
         }

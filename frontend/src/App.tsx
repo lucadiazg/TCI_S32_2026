@@ -53,6 +53,7 @@ function RutaProtegida({
 
 
 // Encabezado compartido por las cuatro pantallas.
+
 function Panel({
   usuario,
   titulo,
@@ -65,43 +66,50 @@ function Panel({
   children: ReactNode
 }) {
   return (
-    <div className="min-h-screen bg-slate-100">
-      <header className="flex flex-wrap items-center justify-between gap-4 bg-slate-800 p-5 text-white">
-        <div>
-          <h1 className="text-xl font-bold">
-            PharmaPlant CORE
-          </h1>
+    <div className="min-h-screen bg-surface text-on-surface">
+      <header className="bg-primary text-white shadow-sm">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-6">
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white text-xl font-bold text-primary">
+              P
+            </div>
 
-          <p className="text-sm text-slate-300">
-            {titulo}
-          </p>
-        </div>
-
-        <div className="flex items-center gap-4">
-          <div className="text-right text-sm">
-            <p className="font-semibold">
-              {usuario.nombre}
-            </p>
-
-            <p className="text-slate-300">
-              Legajo {usuario.legajo}
-            </p>
+            <div>
+              <p className="text-xl font-bold">
+                PharmaPlant CORE
+              </p>
+              <p className="text-sm text-blue-100">
+                {titulo}
+              </p>
+            </div>
           </div>
 
-          <button
-            type="button"
-            onClick={onLogout}
-            className="rounded-lg bg-red-600 px-4 py-2 font-medium hover:bg-red-700"
-          >
-            Cerrar sesión
-          </button>
+          <div className="flex w-full flex-wrap items-center justify-between gap-3 sm:w-auto sm:justify-end">
+            <div className="text-left sm:text-right">
+              <p className="font-semibold">
+                {usuario.nombre}
+              </p>
+              <p className="text-sm text-blue-100">
+                Legajo {usuario.legajo}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={onLogout}
+              className="min-h-12 rounded-lg border border-white/60 px-4 font-semibold text-white transition-colors hover:bg-white/15 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+            >
+              Cerrar sesión
+            </button>
+          </div>
         </div>
       </header>
 
-      <main>{children}</main>
+      <div>{children}</div>
     </div>
   )
 }
+
 
 
 // Administra la autenticación y las rutas.
@@ -263,7 +271,7 @@ function AppRoutes() {
                 titulo="Panel de Gerencia"
                 onLogout={manejarLogout}
               >
-                <section className="mx-auto max-w-5xl p-8">
+                <main className="mx-auto max-w-5xl p-8">
                   <h2 className="text-2xl font-bold text-slate-800">
                     Dashboard de Gerencia
                   </h2>
@@ -272,7 +280,7 @@ function AppRoutes() {
                     Panel de indicadores y consultas.
                     Próximamente conectaremos los datos reales.
                   </p>
-                </section>
+                </main>
               </Panel>
             )}
           </RutaProtegida>

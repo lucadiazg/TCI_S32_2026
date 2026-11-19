@@ -56,12 +56,24 @@ export default function RegistrarUsoRepuesto() {
   const [error, setError] = useState('')
   const [resultado, setResultado] =
     useState<UsoRepuestoResponse | null>(null)
-  
+
   const consultaRepuestoId = useRef(0)
   const repuestoValidado =
-  repuesto !== null &&
-  !consultandoRepuesto &&
-  repuesto.codigo === codigoRepuesto.trim()
+    repuesto !== null &&
+    !consultandoRepuesto &&
+    repuesto.codigo === codigoRepuesto.trim()
+
+  const cantidadNumerica = Number(cantidad)
+
+  const cantidadValida =
+    cantidad.trim() !== '' &&
+    Number.isInteger(cantidadNumerica) &&
+    cantidadNumerica > 0
+
+  const superaStock =
+    repuesto !== null &&
+    cantidadValida &&
+    cantidadNumerica > repuesto.stockDisponible
 
   useEffect(() => {
     async function cargarReparaciones() {
@@ -142,6 +154,7 @@ export default function RegistrarUsoRepuesto() {
     evento: FormEvent<HTMLFormElement>,
   ) {
     evento.preventDefault()
+    if (guardando) return
 
     if (!reparacion) {
       setError('Seleccioná una reparación.')
@@ -153,15 +166,13 @@ export default function RegistrarUsoRepuesto() {
       return
     }
 
-    const cantidadNumerica = Number(cantidad)
+    if (!cantidadValida) {
+      setError('La cantidad debe ser un número entero mayor que cero.')
+      return
+    }
 
-    if (
-      !Number.isInteger(cantidadNumerica) ||
-      cantidadNumerica <= 0
-    ) {
-      setError(
-        'La cantidad debe ser un número entero mayor que cero.',
-      )
+    if (superaStock) {
+      setError('La cantidad supera el stock disponible del repuesto.')
       return
     }
 
@@ -179,6 +190,7 @@ export default function RegistrarUsoRepuesto() {
       )
 
       setResultado(datos)
+      setCantidad('')
 
       setRepuesto((actual) =>
         actual
@@ -197,21 +209,21 @@ export default function RegistrarUsoRepuesto() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-100 px-4 py-8 text-slate-900">
-      <div className="mx-auto max-w-3xl space-y-5">
+    <main className="min-h-screen bg-surface px-3 py-6 text-on-surface sm:px-6 sm:py-8">
+      <div className="mx-auto max-w-5xl space-y-5">
 
-        <header className="rounded-xl bg-white p-6 shadow-sm">
-          <p className="text-sm font-bold text-sky-700">
-            PharmaPlant CORE
+        <header className="rounded-xl border border-[#D5E2EF] border-l-4 border-l-primary bg-white p-5 shadow-sm sm:p-6">
+          <p className="text-sm font-bold uppercase tracking-wide text-primary">
+            Mantenimiento · Consumo de repuestos
           </p>
 
-          <h1 className="mt-2 text-3xl font-bold">
+          <h1 className="mt-2 text-2xl font-bold text-on-surface sm:text-3xl">
             Registrar uso de repuesto
           </h1>
 
-          <p className="mt-2 text-slate-600">
-            Registrá el consumo de un repuesto asociado a una
-            reparación en curso.
+          <p className="mt-2 text-base text-on-surface-variant">
+            Seleccioná una reparación, identificá el repuesto
+            y registrá la cantidad utilizada.
           </p>
         </header>
 
@@ -331,7 +343,7 @@ export default function RegistrarUsoRepuesto() {
                 consultandoRepuesto ||
                 guardando
               }
-              className="mt-3 w-full rounded-lg bg-sky-700 px-4 py-3 font-semibold text-white hover:bg-sky-800 disabled:bg-slate-400"
+              className="mt-3 min-h-12 w-full rounded-lg bg-primary px-5 py-3 text-base font-bold text-white hover:bg-[#004B76] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:bg-slate-400"
             >
               {consultandoRepuesto
                 ? 'Consultando repuesto...'
@@ -352,37 +364,42 @@ export default function RegistrarUsoRepuesto() {
                   {repuesto.codigo}
                 </p>
 
-                <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                  <div className="rounded-lg bg-white p-3">
-                    <p className="text-xs font-semibold text-slate-500">
+
+                <div className="mt-4 grid gap-3 sm:grid-cols-[1.4fr_1fr_1fr]">
+                  <div className="rounded-xl border border-[#B8D7EB] bg-white p-4">
+                    <p className="text-sm font-bold text-[#004B76]">
                       STOCK DISPONIBLE
                     </p>
 
-                    <p className="mt-1 text-xl font-bold">
+                    <p className="mt-2 text-3xl font-extrabold tabular-nums text-on-surface">
                       {repuesto.stockDisponible}
+                      <span className="ml-2 text-sm font-medium text-on-surface-variant">
+                        unidades
+                      </span>
                     </p>
                   </div>
 
-                  <div className="rounded-lg bg-white p-3">
-                    <p className="text-xs font-semibold text-slate-500">
+                  <div className="rounded-xl border border-[#D5E2EF] bg-white p-4">
+                    <p className="text-sm font-bold text-on-surface-variant">
                       UMBRAL MÍNIMO
                     </p>
 
-                    <p className="mt-1 text-xl font-bold">
+                    <p className="mt-2 text-2xl font-bold tabular-nums text-on-surface">
                       {repuesto.umbralMinimo}
                     </p>
                   </div>
 
-                  <div className="rounded-lg bg-white p-3">
-                    <p className="text-xs font-semibold text-slate-500">
+                  <div className="rounded-xl border border-[#D5E2EF] bg-white p-4">
+                    <p className="text-sm font-bold text-on-surface-variant">
                       UBICACIÓN
                     </p>
 
-                    <p className="mt-1 font-bold">
+                    <p className="mt-2 break-words text-lg font-bold text-on-surface">
                       {repuesto.ubicacion?.codigo ?? 'Sin ubicación'}
                     </p>
                   </div>
                 </div>
+
 
                 {repuesto.ubicacion?.descripcion && (
                   <p className="mt-3 text-sm text-slate-600">
@@ -393,41 +410,153 @@ export default function RegistrarUsoRepuesto() {
             )}
           </section>
 
-          <section className="rounded-xl bg-white p-6 shadow-sm">
-            <h2 className="mb-5 text-lg font-bold text-slate-800">
+
+          <section className="rounded-xl bg-white p-5 shadow-sm sm:p-6">
+            <h2 className="mb-5 text-lg font-bold text-on-surface">
               CANTIDAD UTILIZADA
             </h2>
 
             <label
               htmlFor="cantidad"
-              className="mb-2 block font-semibold"
+              className="mb-3 block text-base font-semibold"
             >
-              Cantidad
+              Cantidad de unidades
             </label>
 
-            <input
-              id="cantidad"
-              type="number"
-              min="1"
-              step="1"
-              value={cantidad}
-              onChange={(evento) =>
-                setCantidad(evento.target.value)
-              }
-              disabled={!repuesto || guardando}
-              placeholder="Ejemplo: 2"
-              className="w-full rounded-lg border border-slate-300 bg-white p-3"
-            />
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                aria-label="Restar una unidad"
+                onClick={() => {
+                  setCantidad(String(Math.max(1, cantidadNumerica - 1)))
+                  setError('')
+                }}
+                disabled={
+                  !repuestoValidado ||
+                  !cantidadValida ||
+                  cantidadNumerica <= 1 ||
+                  guardando
+                }
+                className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border-2 border-primary bg-white text-2xl font-bold text-primary hover:bg-surface-container focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                −
+              </button>
+
+              <input
+                id="cantidad"
+                type="number"
+                min="1"
+                max={repuesto?.stockDisponible}
+                step="1"
+                inputMode="numeric"
+                value={cantidad}
+                onChange={(evento) => {
+                  setCantidad(evento.target.value)
+                  setError('')
+                }}
+                disabled={!repuestoValidado || guardando}
+                aria-invalid={
+                  cantidad.trim() !== '' &&
+                  (!cantidadValida || superaStock)
+                }
+                aria-describedby="cantidad-ayuda"
+                placeholder="0"
+                className="h-14 min-w-0 flex-1 rounded-lg border border-outline bg-surface-container-low px-2 text-center text-3xl font-bold tabular-nums text-on-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
+              />
+
+              <button
+                type="button"
+                aria-label="Sumar una unidad"
+                onClick={() => {
+                  setCantidad(String((cantidadValida ? cantidadNumerica : 0) + 1))
+                  setError('')
+                }}
+                disabled={
+                  !repuestoValidado ||
+                  guardando ||
+                  (cantidad.trim() !== '' && !cantidadValida) ||
+                  (repuesto !== null &&
+                    cantidadNumerica >= repuesto.stockDisponible)
+                }
+                className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border-2 border-primary bg-white text-2xl font-bold text-primary hover:bg-surface-container focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                +
+              </button>
+            </div>
+
+            {repuestoValidado && repuesto?.stockDisponible === 0 ? (
+              <p
+                id="cantidad-ayuda"
+                role="status"
+                className="mt-3 font-semibold text-[#A61B1B]"
+              >
+                No hay unidades disponibles para registrar otro consumo.
+              </p>
+            ) : superaStock ? (
+              <p
+                id="cantidad-ayuda"
+                role="alert"
+                className="mt-3 font-semibold text-[#A61B1B]"
+              >
+                La cantidad ingresada supera el stock disponible.
+              </p>
+            ) : cantidad.trim() !== '' && !cantidadValida ? (
+              <p
+                id="cantidad-ayuda"
+                className="mt-3 font-semibold text-[#A61B1B]"
+              >
+                Ingresá un número entero mayor que cero.
+              </p>
+            ) : (
+              <p id="cantidad-ayuda" className="mt-3 text-sm text-on-surface-variant">
+                Podés usar los botones o escribir la cantidad manualmente.
+              </p>
+            )}
           </section>
+
+          {reparacion &&
+            repuesto &&
+            repuestoValidado &&
+            cantidadValida &&
+            !superaStock && (
+              <div className="rounded-xl border border-[#B8D7EB] bg-surface-container-low p-5">
+                <h3 className="font-bold text-primary">
+                  RESUMEN DEL CONSUMO
+                </h3>
+
+                <p className="mt-3">
+                  <strong>Reparación:</strong> #{reparacion.id}
+                </p>
+
+                <p className="mt-1">
+                  <strong>Repuesto:</strong> {repuesto.codigo}
+                </p>
+
+                <p className="mt-1">
+                  <strong>Cantidad:</strong> {cantidadNumerica} unidades
+                </p>
+
+                <p className="mt-1">
+                  <strong>Disponible estimado después del consumo:</strong>{' '}
+                  {repuesto.stockDisponible - cantidadNumerica}
+                </p>
+
+                <p className="mt-3 text-sm text-on-surface-variant">
+                  El stock será verificado nuevamente al registrar.
+                </p>
+              </div>
+            )}
 
           <button
             type="submit"
             disabled={
               !reparacion ||
               !repuestoValidado ||
+              !cantidadValida ||
+              superaStock ||
               guardando
             }
-            className="w-full rounded-lg bg-blue-600 px-4 py-3 font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400"
+            className="min-h-14 w-full rounded-lg bg-primary px-5 py-3 text-lg font-bold text-white shadow-sm hover:bg-[#004B76] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:bg-slate-400"
           >
             {guardando
               ? 'Registrando uso...'

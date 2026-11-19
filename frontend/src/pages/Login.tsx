@@ -1,4 +1,3 @@
-
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Eye, EyeOff } from 'lucide-react'
@@ -59,109 +58,142 @@ export default function Login({ onLogin }: LoginProps) {
     }
   }
 
+
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-100 px-4">
-      <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl">
+    <main className="relative flex min-h-screen items-center justify-center bg-surface px-4 py-8 text-on-surface sm:px-6">
 
-        <div className="mb-8 text-center">
-          <div className="mb-3 text-4xl font-bold text-blue-700">
-            PharmaPlant
-          </div>
+      <div className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-[#D5E2EF] bg-white shadow-xl">
 
-          <h1 className="text-2xl font-semibold text-slate-800">
-            Iniciar sesión
-          </h1>
+        {/* Identidad de PharmaPlant */}
+        <header className="bg-primary px-6 py-7 text-white sm:px-8">
+          <div className="flex items-center gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-white text-2xl font-extrabold text-primary">
+              P
+            </div>
 
-          <p className="mt-2 text-sm text-slate-500">
-            Sistema de stock y mantenimiento de planta
-          </p>
-        </div>
+            <div>
+              <p className="text-2xl font-bold">
+                PharmaPlant CORE
+              </p>
 
-        <form onSubmit={manejarLogin} className="space-y-5">
-
-          <div>
-            <label
-              htmlFor="legajo"
-              className="mb-2 block text-sm font-medium text-slate-700"
-            >
-              Legajo
-            </label>
-
-            <input
-              id="legajo"
-              type="text"
-              inputMode="numeric"
-              maxLength={5}
-              pattern="[0-9]{5}"
-              placeholder="Ejemplo: 00001"
-              value={legajo}
-              onChange={(e) => setLegajo(e.target.value)}
-              required
-              className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="password"
-              className="mb-2 block text-sm font-medium text-slate-700"
-            >
-              Contraseña
-            </label>
-
-            <div className="relative">
-              <input
-                id="password"
-                type={mostrarPassword ? 'text' : 'password'}
-                placeholder="Ingresá tu contraseña"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full rounded-lg border border-slate-300 px-4 py-3 pr-12 outline-none focus:border-blue-600"
-              />
-
-              <button
-                type="button"
-                onClick={() => setMostrarPassword(!mostrarPassword)}
-                aria-label={
-                  mostrarPassword
-                    ? 'Ocultar contraseña'
-                    : 'Mostrar contraseña'
-                }
-                aria-pressed={mostrarPassword}
-                className="absolute inset-y-0 right-3 flex items-center text-slate-500 hover:text-blue-700"
-              >
-                {mostrarPassword ? (
-                  <EyeOff size={20} />
-                ) : (
-                  <Eye size={20} />
-                )}
-              </button>
+              <p className="mt-1 text-sm text-blue-100">
+                Gestión de stock y mantenimiento
+              </p>
             </div>
           </div>
 
-          {error && (
-            <p
-              role="alert"
-              className="rounded-lg bg-red-50 p-3 text-sm text-red-700"
-            >
-              {error}
+          <div className="mt-6 border-t border-white/25 pt-4">
+            <p className="text-sm font-semibold uppercase tracking-wide text-blue-100">
+              Acceso de personal
             </p>
-          )}
+            <p className="mt-1 text-base">
+              Ingresá con tu legajo institucional.
+            </p>
+          </div>
+        </header>
 
-          <button
-            type="submit"
-            disabled={cargando}
-            className="w-full rounded-lg bg-blue-700 py-3 font-semibold text-white hover:bg-blue-800 disabled:opacity-50"
-          >
-            {cargando ? 'Ingresando...' : 'Ingresar'}
-          </button>
+        {/* Formulario */}
+        <div className="p-6 sm:p-8">
+          <h1 className="text-2xl font-bold sm:text-3xl">
+            Iniciar sesión
+          </h1>
 
-        </form>
+          <p className="mt-2 text-base text-on-surface-variant">
+            Accedé a las operaciones habilitadas para tu rol.
+          </p>
 
-        <p className="mt-8 text-center text-xs text-slate-400">
-          PharmaPlant CORE · Acceso para personal autorizado
-        </p>
+          <form onSubmit={manejarLogin} className="mt-7 space-y-5">
+            <div>
+              <label
+                htmlFor="legajo"
+                className="mb-2 block text-base font-semibold"
+              >
+                Legajo
+              </label>
+
+              <input
+                id="legajo"
+                type="text"
+                inputMode="numeric"
+                autoComplete="username"
+                maxLength={5}
+                pattern="[0-9]{5}"
+                placeholder="Ejemplo: 00001"
+                value={legajo}
+                onChange={(e) => setLegajo(e.target.value)}
+                required
+                className="min-h-14 w-full rounded-lg border border-outline bg-surface-container-low px-4 text-lg text-on-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              />
+
+              <p className="mt-2 text-sm text-on-surface-variant">
+                Ingresá los cinco dígitos de tu legajo.
+              </p>
+            </div>
+
+            <div>
+              <label
+                htmlFor="password"
+                className="mb-2 block text-base font-semibold"
+              >
+                Contraseña
+              </label>
+
+              <div className="relative">
+                <input
+                  id="password"
+                  type={mostrarPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  placeholder="Ingresá tu contraseña"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="min-h-14 w-full rounded-lg border border-outline bg-surface-container-low px-4 pr-14 text-lg text-on-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                />
+
+                <button
+                  type="button"
+                  onClick={() => setMostrarPassword(!mostrarPassword)}
+                  aria-label={
+                    mostrarPassword
+                      ? 'Ocultar contraseña'
+                      : 'Mostrar contraseña'
+                  }
+                  aria-pressed={mostrarPassword}
+                  className="absolute inset-y-0 right-0 flex w-14 items-center justify-center rounded-r-lg text-primary hover:bg-surface-container focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                >
+                  {mostrarPassword ? (
+                    <EyeOff size={24} />
+                  ) : (
+                    <Eye size={24} />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {error && (
+              <p
+                role="alert"
+                className="rounded-lg border border-red-300 bg-red-50 p-4 font-medium text-red-800"
+              >
+                {error}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={cargando}
+              className="min-h-14 w-full rounded-lg bg-primary px-5 py-3 text-lg font-bold text-white shadow-sm transition-colors hover:bg-[#004B76] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:bg-slate-400"
+            >
+              {cargando ? 'Ingresando...' : 'Ingresar'}
+            </button>
+          </form>
+
+          <div className="mt-8 border-t border-[#D5E2EF] pt-5 text-center">
+            <p className="text-sm text-on-surface-variant">
+              PharmaPlant CORE · Acceso para personal autorizado
+            </p>
+          </div>
+        </div>
       </div>
     </main>
   )

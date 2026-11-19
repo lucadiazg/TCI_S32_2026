@@ -228,245 +228,191 @@ export default function ReportarIncidencia() {
 
 
   return (
-    <main className="min-h-screen bg-slate-100 px-4 py-8 text-slate-900">
-      <div className="mx-auto max-w-3xl space-y-5">
-
-        {/* Encabezado */}
-        <header className="rounded-xl bg-white p-6 shadow-sm">
-          <p className="text-sm font-bold text-sky-700">
-            PharmaPlant CORE
+    <main className="min-h-screen bg-surface px-3 py-6 text-on-surface sm:px-6 sm:py-8">
+      <div className="mx-auto max-w-5xl space-y-5">
+        <header className="rounded-xl border border-[#D5E2EF] border-l-4 border-l-primary bg-white p-5 shadow-sm sm:p-6">
+          <p className="text-sm font-bold uppercase tracking-wide text-primary">
+            Operaciones · Reporte de incidencias
           </p>
-
-          <h1 className="mt-2 text-3xl font-bold">
+          <h1 className="mt-2 text-2xl font-bold text-on-surface sm:text-3xl">
             Reportar incidencia
           </h1>
-
-          <p className="mt-2 text-slate-600">
-            Registro rápido de avería en línea de producción activa.
+          <p className="mt-2 text-base text-on-surface-variant">
+            Identificá la máquina, describí la falla y registrá el reporte.
           </p>
         </header>
 
-        <form
-          onSubmit={reportarIncidencia}
-          className="space-y-5"
-        >
-
-          {/* Identificación de máquina */}
-          <section className="rounded-xl bg-white p-6 shadow-sm">
-            <h2 className="mb-5 text-lg font-bold text-slate-800">
-              IDENTIFICACIÓN DE MÁQUINA
-            </h2>
-
-            <label
-              htmlFor="maquina"
-              className="mb-2 block font-semibold"
-            >
-              Código QR o código de máquina
-            </label>
-
-            <input
-              id="maquina"
-              type="text"
-              value={codigoMaquina}
-              onChange={(evento) => {
-                setCodigoMaquina(evento.target.value)
-                setMaquina(null)
-                setResultado(null)
-              }}
-              placeholder="Ejemplo: MAQ-001"
-              className="w-full rounded-lg border border-slate-300 bg-slate-50 p-3"
-              required
-            />
-
-            <button
-              type="button"
-              onClick={consultarMaquina}
-              disabled={consultando || enviando}
-              className="mt-3 w-full rounded-lg bg-sky-700 px-4 py-3 font-semibold text-white hover:bg-sky-800 disabled:bg-slate-400"
-            >
-              {consultando
-                ? 'Consultando máquina...'
-                : 'Validar máquina'}
-            </button>
-
-            {maquina && (
-              <div className="mt-5 rounded-xl bg-blue-50 p-5">
-                <p className="text-sm font-bold text-sky-700">
-                  ✓ MÁQUINA IDENTIFICADA
-                </p>
-
-                <h3 className="mt-2 text-xl font-bold text-slate-900">
-                  {maquina.nombre}
-                </h3>
-
-                <p className="mt-2 text-slate-600">
-                  {[maquina.linea, maquina.area]
-                    .filter(Boolean)
-                    .join(' · ')}
-                </p>
-
-                <div className="mt-4 rounded-lg bg-white p-3">
-                  <p className="text-xs font-semibold text-slate-500">
-                    CÓDIGO DE ACTIVO
-                  </p>
-
-                  <p className="font-mono font-bold">
-                    {maquina.codigo}
-                  </p>
-
-                  <p className="mt-1 text-sm text-slate-500">
-                    Tag: {maquina.tag}
-                  </p>
-
-                  {maquina.estado && (
-                    <p className="mt-1 text-sm text-slate-500">
-                      Estado: {maquina.estado}
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
-          </section>
-
-          {/* Descripción */}
-          <section className="rounded-xl bg-white p-6 shadow-sm">
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <h2 className="text-lg font-bold">
-                DESCRIPCIÓN DE LA FALLA
+        <form onSubmit={reportarIncidencia} className="space-y-5">
+          <div className="grid items-start gap-5 lg:grid-cols-2">
+            <section className="rounded-xl border border-[#D5E2EF] bg-white p-5 shadow-sm sm:p-6">
+              <h2 className="mb-5 text-lg font-bold text-on-surface">
+                IDENTIFICACIÓN DE MÁQUINA
               </h2>
 
-              <span className="text-sm text-slate-500">
-                {descripcion.length} / 250
-              </span>
-            </div>
+              <label htmlFor="maquina" className="mb-2 block text-base font-semibold">
+                Código de la máquina
+              </label>
+              <input
+                id="maquina"
+                type="text"
+                value={codigoMaquina}
+                onChange={(evento) => {
+                  setCodigoMaquina(evento.target.value)
+                  setMaquina(null)
+                  setResultado(null)
+                  setError('')
+                }}
+                placeholder="Ejemplo: MAQ-USO-DEMO"
+                spellCheck={false}
+                autoCapitalize="off"
+                autoComplete="off"
+                disabled={enviando}
+                className="min-h-12 w-full rounded-lg border border-outline bg-surface-container-low px-4 py-3 text-base text-on-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
+                required
+              />
 
-            <label
-              htmlFor="descripcion"
-              className="mb-2 block font-medium"
-            >
-              Describí el problema detectado
-            </label>
+              <button
+                type="button"
+                onClick={consultarMaquina}
+                disabled={consultando || enviando}
+                className="mt-3 min-h-12 w-full rounded-lg bg-primary px-5 py-3 text-base font-bold text-white hover:bg-[#004B76] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:bg-slate-400"
+              >
+                {consultando ? 'Consultando máquina...' : 'Validar máquina'}
+              </button>
 
-            <textarea
-              id="descripcion"
-              value={descripcion}
-              onChange={(evento) =>
-                setDescripcion(evento.target.value)
-              }
-              minLength={5}
-              maxLength={250}
-              placeholder="Ej.: La máquina no enciende..."
-              className="min-h-36 w-full rounded-lg border border-slate-300 bg-blue-50 p-3"
-              required
-            />
-          </section>
+              {maquina && (
+                <div className="mt-5 rounded-xl border border-[#B8D7EB] bg-surface-container-low p-4 sm:p-5">
+                  <p className="text-sm font-bold text-primary">
+                    ✓ MÁQUINA IDENTIFICADA
+                  </p>
+                  <h3 className="mt-2 text-xl font-bold text-on-surface">
+                    {maquina.nombre}
+                  </h3>
+                  <p className="mt-2 text-base text-on-surface-variant">
+                    {[maquina.linea, maquina.area].filter(Boolean).join(' · ')}
+                  </p>
+                  <div className="mt-4 rounded-lg border border-[#D5E2EF] bg-white p-4">
+                    <p className="text-sm font-semibold text-on-surface-variant">
+                      CÓDIGO DE ACTIVO
+                    </p>
+                    <p className="mt-1 break-all font-mono text-base font-bold text-on-surface">
+                      {maquina.codigo}
+                    </p>
+                    <p className="mt-2 text-sm text-on-surface-variant">
+                      Tag: {maquina.tag}
+                    </p>
+                    {maquina.estado && (
+                      <p className="mt-1 text-sm text-on-surface-variant">
+                        Estado: {maquina.estado}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </section>
 
-          {/* Turno */}
-          <section className="rounded-xl bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-lg font-bold">
-              TURNO DE TRABAJO
-            </h2>
+            <section className="rounded-xl border border-[#D5E2EF] bg-white p-5 shadow-sm sm:p-6">
+              <div className="mb-5 flex flex-wrap items-center justify-between gap-2">
+                <h2 className="text-lg font-bold text-on-surface">
+                  DESCRIPCIÓN DE LA FALLA
+                </h2>
+                <span className="text-sm font-medium text-on-surface-variant">
+                  {descripcion.length} / 250
+                </span>
+              </div>
+              <label htmlFor="descripcion" className="mb-2 block text-base font-semibold">
+                ¿Qué problema detectaste?
+              </label>
+              <textarea
+                id="descripcion"
+                value={descripcion}
+                onChange={(evento) => setDescripcion(evento.target.value)}
+                minLength={5}
+                maxLength={250}
+                disabled={enviando}
+                placeholder="Ejemplo: La máquina se detuvo durante el envasado..."
+                className="min-h-36 w-full rounded-lg border border-outline bg-surface-container-low px-4 py-3 text-base text-on-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
+                required
+              />
+              <p className="mt-2 text-sm text-on-surface-variant">
+                Usá al menos 5 caracteres para describir la falla.
+              </p>
 
-            <label
-              htmlFor="turno"
-              className="mb-2 block font-medium"
-            >
-              Seleccioná el turno en el que se detectó la falla
-            </label>
+              <label htmlFor="turno" className="mb-2 mt-5 block text-base font-semibold">
+                Turno de trabajo
+              </label>
+              <select
+                id="turno"
+                value={turno}
+                onChange={(evento) => setTurno(evento.target.value as Turno)}
+                disabled={enviando}
+                className="min-h-12 w-full rounded-lg border border-outline bg-white px-4 py-3 text-base text-on-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
+                required
+              >
+                <option value="mañana">Mañana</option>
+                <option value="tarde">Tarde</option>
+                <option value="noche">Noche</option>
+              </select>
+            </section>
+          </div>
 
-            <select
-              id="turno"
-              value={turno}
-              onChange={(evento) =>
-                setTurno(evento.target.value as Turno)
-              }
-              className="w-full rounded-lg border border-slate-300 bg-slate-50 p-3"
-              required
-            >
-              <option value="mañana">Mañana</option>
-              <option value="tarde">Tarde</option>
-              <option value="noche">Noche</option>
-            </select>
-          </section>
-
-          {/* Fotografías */}
-          <section className="rounded-xl bg-white p-6 shadow-sm">
-            <div className="mb-4 flex justify-between gap-3">
-              <h2 className="text-lg font-bold">
+          <section className="rounded-xl border border-[#D5E2EF] bg-white p-5 shadow-sm sm:p-6">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-lg font-bold text-on-surface">
                 REGISTRO FOTOGRÁFICO
               </h2>
-
-              <span className="text-sm font-semibold text-sky-700">
-                {fotos.length}/3 Máx.
+              <span className="text-sm font-semibold text-on-surface-variant">
+                Opcional · hasta 3
               </span>
             </div>
+            <p className="mt-3 rounded-lg border border-[#D5E2EF] bg-surface-container-low p-3 text-sm text-on-surface-variant">
+              Esta función está en desarrollo: las fotos seleccionadas no se envían ni se guardan con la incidencia.
+            </p>
 
-            <label
-              htmlFor="fotos"
-              className="mb-2 block font-medium"
-            >
-              Fotografías de la falla (opcional)
+            <label htmlFor="fotos" className="mb-2 mt-4 block text-base font-semibold">
+              Seleccionar fotografías (solo vista previa de nombres)
             </label>
-
             <input
               id="fotos"
               type="file"
               accept="image/*"
               multiple
+              disabled={enviando}
               onChange={(evento) => {
-                if (
-                  evento.target.files &&
-                  evento.target.files.length > 3
-                ) {
+                if (evento.target.files && evento.target.files.length > 3) {
                   setError('Podés seleccionar hasta 3 fotografías.')
                   setFotos([])
                   evento.target.value = ''
                   return
                 }
-
                 seleccionarFotos(evento.target.files)
               }}
-              className="w-full rounded-lg border border-slate-300 p-3"
+              className="min-h-12 w-full rounded-lg border border-outline bg-white p-3 text-base text-on-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             />
 
             {fotos.length > 0 && (
-              <div className="mt-3 rounded-lg bg-slate-50 p-3">
+              <div className="mt-3 rounded-lg bg-surface-container-low p-4">
+                <p className="font-semibold">Archivos seleccionados (sin guardar):</p>
                 {fotos.map((foto, indice) => (
-                  <p
-                    key={`${foto.name}-${indice}`}
-                    className="text-sm"
-                  >
+                  <p key={`${foto.name}-${indice}`} className="mt-1 break-words text-sm">
                     {foto.name}
                   </p>
                 ))}
               </div>
             )}
+          </section>
 
-            <p className="mt-3 text-xs text-slate-500">
-              La carga de fotografías al servidor todavía no está
-              implementada. Los archivos seleccionados no se envían
-              ni se guardan con la incidencia.
+          <section className="rounded-xl border border-[#B8D7EB] bg-surface-container-low p-5">
+            <h2 className="font-bold text-primary">ANTES DE REGISTRAR</h2>
+            <p className="mt-2 text-base text-on-surface-variant">
+              Verificá el código de la máquina, la descripción y el turno. El sistema devolverá el identificador del reporte cuando se guarde.
             </p>
           </section>
 
-          {/* Información */}
-          <section className="rounded-xl border border-blue-200 bg-blue-50 p-5">
-            <h2 className="font-bold text-sky-800">
-              INFORMACIÓN DEL REPORTE
-            </h2>
-
-            <p className="mt-2 text-sm text-slate-600">
-              La incidencia se guardará en PostgreSQL.
-              El identificador, estado y fecha serán devueltos
-              por FastAPI.
-            </p>
-          </section>
-
-          {/* Mensaje de error */}
           {error && (
             <div
               role="alert"
-              className="rounded-lg border border-red-300 bg-red-50 p-4 text-red-700"
+              className="rounded-lg border border-[#A61B1B] bg-[#FFF0EE] p-4 text-base font-medium text-[#A61B1B]"
             >
               {error}
             </div>
@@ -474,67 +420,38 @@ export default function ReportarIncidencia() {
 
           <button
             type="submit"
-            disabled={enviando || consultando}
-            className="w-full rounded-lg bg-sky-700 px-5 py-4 text-lg font-bold text-white shadow-md hover:bg-sky-800 disabled:bg-slate-400"
+            disabled={enviando || consultando || !maquina || maquina.codigo !== codigoMaquina.trim()}
+            className="min-h-14 w-full rounded-lg bg-primary px-5 py-3 text-lg font-bold text-white shadow-sm hover:bg-[#004B76] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:bg-slate-400"
           >
-            {enviando
-              ? 'Guardando incidencia...'
-              : '✓ Reportar incidencia'}
+            {enviando ? 'Guardando incidencia...' : 'Reportar incidencia'}
           </button>
         </form>
 
-        {/* Confirmación de registro */}
         {resultado && (
           <section
             role="status"
-            className="rounded-xl border border-green-200 bg-white p-6 shadow-sm"
+            className="rounded-xl border border-[#A8D7BC] bg-[#E7F6ED] p-5 shadow-sm sm:p-6"
           >
-            <h2 className="text-xl font-bold text-green-700">
+            <h2 className="text-xl font-bold text-[#14633D]">
               ✓ Incidencia registrada correctamente
             </h2>
-
-            <p className="mt-2 text-sm text-slate-600">
-              La incidencia fue guardada en PostgreSQL
-              mediante FastAPI.
+            <p className="mt-2 text-base text-[#14633D]">
+              El reporte fue registrado. Estos son los datos confirmados por el servidor.
             </p>
-
-            <div className="mt-4 space-y-2">
-              <p>
-                <strong>ID:</strong> {resultado.id}
-              </p>
-
-              {resultado.codigo && (
-                <p>
-                  <strong>Código:</strong> {resultado.codigo}
-                </p>
-              )}
-
-              <p>
-                <strong>Estado:</strong> {resultado.estado}
-              </p>
-
-              <p>
-                <strong>Máquina:</strong> {resultado.codigo_maquina}
-              </p>
-
-              <p>
-                <strong>Turno:</strong> {resultado.turno}
-              </p>
-
-              <p>
-                <strong>Descripción:</strong> {resultado.descripcion}
-              </p>
-
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <p><strong>ID:</strong> {resultado.id}</p>
+              {resultado.codigo && <p><strong>Código:</strong> {resultado.codigo}</p>}
+              <p><strong>Estado:</strong> {resultado.estado}</p>
+              <p><strong>Máquina:</strong> {resultado.codigo_maquina}</p>
+              <p><strong>Turno:</strong> {resultado.turno}</p>
               <p>
                 <strong>Fecha y hora:</strong>{' '}
-                {new Date(resultado.fecha_hora).toLocaleString(
-                  'es-AR',
-                  {
-                    dateStyle: 'short',
-                    timeStyle: 'medium',
-                  }
-                )}
+                {new Date(resultado.fecha_hora).toLocaleString('es-AR', {
+                  dateStyle: 'short',
+                  timeStyle: 'medium',
+                })}
               </p>
+              <p className="sm:col-span-2"><strong>Descripción:</strong> {resultado.descripcion}</p>
             </div>
           </section>
         )}

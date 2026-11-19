@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 
 import {
@@ -56,6 +56,12 @@ export default function RegistrarUsoRepuesto() {
   const [error, setError] = useState('')
   const [resultado, setResultado] =
     useState<UsoRepuestoResponse | null>(null)
+  
+  const consultaRepuestoId = useRef(0)
+  const repuestoValidado =
+  repuesto !== null &&
+  !consultandoRepuesto &&
+  repuesto.codigo === codigoRepuesto.trim()
 
   useEffect(() => {
     async function cargarReparaciones() {
@@ -76,6 +82,8 @@ export default function RegistrarUsoRepuesto() {
   }, [])
 
   async function cambiarReparacion(valor: string) {
+    consultaRepuestoId.current += 1
+    setConsultandoRepuesto(false)
     setReparacionId(valor)
     setReparacion(null)
     setRepuesto(null)
@@ -106,6 +114,8 @@ export default function RegistrarUsoRepuesto() {
       return
     }
 
+    const consultaActual = ++consultaRepuestoId.current
+
     try {
       setConsultandoRepuesto(true)
       setError('')
@@ -113,11 +123,18 @@ export default function RegistrarUsoRepuesto() {
       setResultado(null)
 
       const datos = await obtenerRepuesto(codigo)
+
+      if (consultaActual !== consultaRepuestoId.current) return
+
       setRepuesto(datos)
     } catch (errorDesconocido) {
-      setError(mensajeDeError(errorDesconocido))
+      if (consultaActual === consultaRepuestoId.current) {
+        setError(mensajeDeError(errorDesconocido))
+      }
     } finally {
-      setConsultandoRepuesto(false)
+      if (consultaActual === consultaRepuestoId.current) {
+        setConsultandoRepuesto(false)
+      }
     }
   }
 
@@ -131,8 +148,8 @@ export default function RegistrarUsoRepuesto() {
       return
     }
 
-    if (!repuesto) {
-      setError('Primero tenés que identificar el repuesto.')
+    if (!repuesto || !repuestoValidado) {
+      setError('Primero tenés que validar el repuesto actual.')
       return
     }
 
@@ -166,10 +183,10 @@ export default function RegistrarUsoRepuesto() {
       setRepuesto((actual) =>
         actual
           ? {
-              ...actual,
-              stockFisico: datos.stockFisico,
-              stockDisponible: datos.stockDisponible,
-            }
+            ...actual,
+            stockFisico: datos.stockFisico,
+            stockDisponible: datos.stockDisponible,
+          }
           : actual,
       )
     } catch (errorDesconocido) {
@@ -294,9 +311,12 @@ export default function RegistrarUsoRepuesto() {
               type="text"
               value={codigoRepuesto}
               onChange={(evento) => {
+                consultaRepuestoId.current += 1
+                setConsultandoRepuesto(false)
                 setCodigoRepuesto(evento.target.value)
                 setRepuesto(null)
                 setResultado(null)
+                setError('')
               }}
               disabled={!reparacion || guardando}
               placeholder="Ejemplo: REP-VALV-304"
@@ -404,7 +424,7 @@ export default function RegistrarUsoRepuesto() {
             type="submit"
             disabled={
               !reparacion ||
-              !repuesto ||
+              !repuestoValidado ||
               guardando
             }
             className="w-full rounded-lg bg-blue-600 px-4 py-3 font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400"

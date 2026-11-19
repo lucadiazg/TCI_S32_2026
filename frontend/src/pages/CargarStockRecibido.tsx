@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import type { FormEvent } from 'react'
 import {
   HttpError,
-  listarPedidos,
   obtenerPedido,
   registrarRecepcion,
 } from '../services/pedidosApi'
@@ -26,46 +25,16 @@ function mensajeDeError(error: unknown): string {
 }
 
 export default function CargarStockRecibido() {
-  const [pedidos, setPedidos] = useState<PedidoCompra[]>([])
   const [pedido, setPedido] = useState<PedidoCompra | null>(null)
   const [pedidoId, setPedidoId] = useState('')
   const [codigoRepuesto, setCodigoRepuesto] = useState('')
   const [cantidadRecibida, setCantidadRecibida] = useState('')
   const [ubicacion, setUbicacion] = useState('')
 
-  const [cargando, setCargando] = useState(true)
+  const [cargando, setCargando] = useState(false)
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState('')
   const [exito, setExito] = useState('')
-
-  useEffect(() => {
-    async function cargarPedidos() {
-      try {
-        setCargando(true)
-        setError('')
-
-        const lista = await listarPedidos()
-        setPedidos(lista)
-
-        if (lista.length > 0) {
-          const primerPedido = lista[0]
-          const detalle = await obtenerPedido(primerPedido.id)
-
-          setPedidoId(String(primerPedido.id))
-          setPedido(detalle)
-          setCodigoRepuesto(
-            detalle.items[0]?.codigoRepuesto ?? '',
-          )
-        }
-      } catch (errorDesconocido) {
-        setError(mensajeDeError(errorDesconocido))
-      } finally {
-        setCargando(false)
-      }
-    }
-
-    cargarPedidos()
-  }, [])
 
   async function cambiarPedido(nuevoPedidoId: string) {
     setPedidoId(nuevoPedidoId)
@@ -141,6 +110,9 @@ await registrarRecepcion(
   },
 )
 
+const pedidoActualizado = await obtenerPedido(pedido.id)
+setPedido(pedidoActualizado)
+
 setExito(
   `Recepción registrada correctamente. Se recibieron ${cantidad} unidades.`,
 )
@@ -206,28 +178,25 @@ setExito(
                 Orden de compra
               </label>
 
-              <select
+              <input
                 id="pedido"
+                type="number"
+                min="1"
+                step="1"
                 className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
                 value={pedidoId}
-                onChange={(evento) =>
-                  cambiarPedido(evento.target.value)
-                }
-                disabled={cargando}
-              >
-                <option value="">
-                  Seleccionar una orden
-                </option>
+                onChange={(evento) => setPedidoId(evento.target.value)}
+                placeholder="Ingresá el ID de la orden. Ejemplo: 2"
+              />
 
-                {pedidos.map((pedidoDisponible) => (
-                  <option
-                    key={pedidoDisponible.id}
-                    value={pedidoDisponible.id}
-                  >
-                    {pedidoDisponible.codigo}
-                  </option>
-                ))}
-              </select>
+              <button
+                type="button"
+                onClick={() => cambiarPedido(pedidoId)}
+                disabled={cargando || !pedidoId || !Number.isSafeInteger(Number(pedidoId)) || Number(pedidoId) <= 0}
+                className="mt-3 rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white disabled:bg-slate-400"
+              >
+                {cargando ? 'Buscando...' : 'Buscar orden'}
+              </button>
             </div>
 
             {pedido && (

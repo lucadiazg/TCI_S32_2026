@@ -1,9 +1,12 @@
-from fastapi import APIRouter, Depends, Path
+from fastapi import APIRouter, Depends, Path, HTTPException
 from pydantic import BaseModel, Field
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from app.database import get_session
 from app.services.recepciones import registrar_recepcion_service
+
+from app.models.compras import PedidoCompra, PedidoItem
+from app.models.stock import Repuesto
 
 #rutas de la recepcion, agrupa los endpoints
 router = APIRouter(tags=["Recepciones"])
@@ -56,3 +59,47 @@ def registrar_recepcion( #recepcionrequet recibe datos y los valida automaticame
         ubicacion_codigo=datos.ubicacion.codigo,
         ubicacion_descripcion=datos.ubicacion.descripcion
     )
+
+#Consulta un pedido de compra por id
+@router.get("/pedidos/{pedidoId}")
+def obtener_pedido(
+    pedidoId: int = Path(ge=1),
+    session: Session = Depends(get_session)
+):
+    #buscar el pedido en PostgreSQL
+    pedido = session.get(PedidoCompra, pedidoId)
+
+    if pedido is None:
+        raise HTTPException(
+            status_code=404,
+            detail="El pedido de compra no existe"
+        )
+
+    #Busca repuestos asociados al pedido
+    items = session.exec(
+        select(PedidoItem).where(
+            PedidoItem.pedido_id == pedidoId
+        )
+    ).all()
+
+    detalle_items = []
+
+    for item in items:
+        repuesto = session.get(
+            Repuesto,
+            item.codigo_repuesto
+        )
+
+        detalle_items.append({
+            "codigoRepuesto": item.codigo_repuesto,
+            "nombre": repuesto.nombre if repuesto else "",
+            "cantidadSolicitada": item.cantidad_solicitada,
+            "cantidadRecibida": item.cantidad_recibida
+        })
+
+    return {
+        "id": pedido.id,
+        "codigo": pedido.codigo,
+        "estado": pedido.estado,
+        "items": detalle_items
+    }

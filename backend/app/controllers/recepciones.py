@@ -87,6 +87,19 @@ def obtener_pedido(
         )
     ).all()
 
+    # Verifica si todos los repuestos del pedido fueron recibidos
+    pedido_completo = bool(items) and all(
+        item.cantidad_recibida >= item.cantidad_solicitada
+        for item in items
+    )
+
+    # Actualiza el estado si está desactualizado
+    if pedido_completo and pedido.estado != "completado":
+        pedido.estado = "completado"
+        session.add(pedido)
+        session.commit()
+        session.refresh(pedido)
+
     detalle_items = []
 
     for item in items:

@@ -33,14 +33,22 @@ export default function CargarStockRecibido() {
 
   const [cargando, setCargando] = useState(false)
   const [guardando, setGuardando] = useState(false)
-  const [error, setError] = useState('')
+  const [errorPedido, setErrorPedido] = useState('')
+  const [errorRepuesto, setErrorRepuesto] = useState('')
+  const [errorCantidad, setErrorCantidad] = useState('')
+  const [errorUbicacion, setErrorUbicacion] = useState('')
+  const [errorGeneral, setErrorGeneral] = useState('')
   const [exito, setExito] = useState('')
 
   async function cambiarPedido(nuevoPedidoId: string) {
     setPedidoId(nuevoPedidoId)
     setPedido(null)
     setCodigoRepuesto('')
-    setError('')
+    setErrorPedido('')
+    setErrorRepuesto('')
+    setErrorCantidad('')
+    setErrorUbicacion('')
+    setErrorGeneral('')
     setExito('')
 
     if (!nuevoPedidoId) {
@@ -59,7 +67,7 @@ export default function CargarStockRecibido() {
         detalle.items[0]?.codigoRepuesto ?? '',
       )
     } catch (errorDesconocido) {
-      setError(mensajeDeError(errorDesconocido))
+      setErrorPedido(mensajeDeError(errorDesconocido))
     } finally {
       setCargando(false)
     }
@@ -69,30 +77,34 @@ export default function CargarStockRecibido() {
     evento: FormEvent<HTMLFormElement>,
   ) {
     evento.preventDefault()
-    setError('')
+    setErrorPedido('')
+    setErrorRepuesto('')
+    setErrorCantidad('')
+    setErrorUbicacion('')
+    setErrorGeneral('')
     setExito('')
 
     const cantidad = Number(cantidadRecibida)
 
     if (!pedido) {
-      setError('Seleccioná una orden de compra.')
+      setErrorPedido('Seleccioná una orden de compra valida.')
       return
     }
 
     if (!codigoRepuesto) {
-      setError('Seleccioná un repuesto.')
+      setErrorRepuesto('Seleccioná un repuesto.')
       return
     }
 
     if (!Number.isInteger(cantidad) || cantidad <= 0) {
-      setError(
+      setErrorCantidad(
         'La cantidad recibida debe ser un número entero mayor que cero.',
       )
       return
     }
 
     if (!ubicacion.trim()) {
-      setError('Ingresá el código de ubicación.')
+      setErrorUbicacion('Ingresá el código de ubicación.')
       return
     }
 
@@ -119,8 +131,25 @@ setExito(
 
       setCantidadRecibida('')
       setUbicacion('')
-    } catch (errorDesconocido) {
-      setError(mensajeDeError(errorDesconocido))
+    } catch (errorDesconocido) {  if (errorDesconocido instanceof HttpError) {
+        const mensaje = mensajeDeError(errorDesconocido)
+
+        if (
+          errorDesconocido.status === 400 &&
+          errorDesconocido.message.includes('no pertenece')
+        ) {
+          setErrorRepuesto(mensaje)
+        } else if (
+          errorDesconocido.status === 400 &&
+          errorDesconocido.message.includes('supera')
+        ) {
+          setErrorCantidad(mensaje)
+        } else {
+          setErrorGeneral(mensaje)
+        }
+      } else {
+        setErrorGeneral(mensajeDeError(errorDesconocido))
+      }
     } finally {
       setGuardando(false)
     }
@@ -153,9 +182,9 @@ setExito(
         </header>
 
         <div className="space-y-5">
-          {error && (
+          {errorGeneral && (
             <div role="alert" className="rounded-lg border border-red-300 bg-red-50 p-4 font-medium text-red-800">
-              {error}
+              {errorGeneral}
             </div>
           )}
 
@@ -187,7 +216,17 @@ setExito(
                 step="1"
                 className="min-h-12 w-full rounded-lg border border-outline bg-surface-container-low px-4 py-3 text-base focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                 value={pedidoId}
-                onChange={(evento) => setPedidoId(evento.target.value)}
+                onChange={(evento) => {
+                  setPedidoId(evento.target.value)
+                  setPedido(null)
+                  setCodigoRepuesto('')
+                  setErrorPedido('')
+                  setErrorRepuesto('')
+                  setErrorCantidad('')
+                  setErrorUbicacion('')
+                  setErrorGeneral('')
+                  setExito('')
+                }}
                 placeholder="Ingresá el ID de la orden. Ejemplo: 2"
               />
 
@@ -199,6 +238,12 @@ setExito(
               >
                 {cargando ? 'Buscando...' : 'Buscar orden'}
               </button>
+
+              {errorPedido && (
+                <p role="alert" className="mt-2 text-sm font-semibold text-red-700">
+                  {errorPedido}
+                </p>
+              )}
 
               {pedido && (
                 <div className="mt-5 rounded-xl border border-[#B8D7EB] bg-surface-container-low p-4 sm:p-5">
@@ -244,6 +289,12 @@ setExito(
                   </option>
                 ))}
               </select>
+
+              {errorRepuesto && (
+                <p role="alert" className="mt-2 text-sm font-semibold text-red-700">
+                  {errorRepuesto}
+                </p>
+              )}
 
               {repuestoSeleccionado && (
                 <div className="mt-5 rounded-xl bg-surface-container-low p-4 sm:p-5">
@@ -299,6 +350,11 @@ setExito(
                     }
                     placeholder="Ejemplo: 5"
                   />
+                  {errorCantidad && (
+                    <p role="alert" className="mt-2 text-sm font-semibold text-red-700">
+                      {errorCantidad}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -319,8 +375,14 @@ setExito(
                     }
                     placeholder="Ejemplo: A-01-03"
                   />
-                </div>
+
+              {errorUbicacion && (
+                <p role="alert" className="mt-2 text-sm font-semibold text-red-700">
+                  {errorUbicacion}
+                </p>
+              )}
               </div>
+            </div>
 
               {repuestoSeleccionado && (
                 <p className="mt-4 rounded-lg bg-surface-container-low p-3 text-base text-on-surface-variant">

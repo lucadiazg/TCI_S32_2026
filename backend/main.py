@@ -9,6 +9,7 @@ from app.controllers.repuestos import router as repuestos_router
 from app.controllers.reparaciones import router as reparaciones_router
 from app.controllers.maquinas import router as maquinas_router
 from app.controllers.compras import router as compras_router
+from app.controllers.reservas import router as reservas_router
 
 app = FastAPI(
     title="PharmaPlant CORE API",
@@ -18,13 +19,13 @@ app = FastAPI(
 # Permitir solicitudes desde el frontend React
 app.add_middleware(
     CORSMiddleware,
-   allow_origins=[
-    "http://localhost:5173",
-    "http://localhost:5174",
-    "http://localhost:5175",
-    "http://localhost:5176",
-    "http://localhost:5177",
-],
+    allow_origins=[
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "http://localhost:5175",
+        "http://localhost:5176",
+        "http://localhost:5177",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -38,6 +39,7 @@ app.include_router(repuestos_router)
 app.include_router(reparaciones_router)
 app.include_router(maquinas_router)
 app.include_router(compras_router)
+app.include_router(reservas_router)
 
 @app.get("/api/health")
 def health() -> dict[str, str]:

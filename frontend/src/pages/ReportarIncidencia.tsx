@@ -1,6 +1,8 @@
 
 import { useState, type FormEvent } from 'react'
+import { ScanLine } from 'lucide-react'
 import { obtenerToken } from '../services/authApi'
+import EscanerQR from '../components/EscanerQR'
 
 type Maquina = {
   codigo: string
@@ -38,7 +40,6 @@ type ErrorApi = {
 const API_URL =
   import.meta.env.VITE_API_URL ?? 'http://localhost:8001'
 
-
 function obtenerMensajeError(
   datos: ErrorApi,
   mensaje: string
@@ -56,7 +57,6 @@ function obtenerMensajeError(
   return datos.mensaje ?? mensaje
 }
 
-
 export default function ReportarIncidencia() {
   const [codigoMaquina, setCodigoMaquina] = useState('')
   const [descripcion, setDescripcion] = useState('')
@@ -69,6 +69,17 @@ export default function ReportarIncidencia() {
   const [error, setError] = useState('')
   const [resultado, setResultado] = useState<Incidencia | null>(null)
 
+  // Control de la cámara para escanear QR.
+  const [mostrarEscaner, setMostrarEscaner] = useState(false)
+
+  // Recibir el código identificado por el lector QR.
+  function manejarQRDetectado(codigo: string) {
+    setCodigoMaquina(codigo)
+    setMaquina(null)
+    setResultado(null)
+    setError('')
+    setMostrarEscaner(false)
+  }
 
   // Consultar máquina por código.
   async function consultarMaquina() {
@@ -103,7 +114,6 @@ export default function ReportarIncidencia() {
 
       const datos: Maquina = await respuesta.json()
       setMaquina(datos)
-
     } catch (errorDesconocido) {
       setError(
         errorDesconocido instanceof Error
@@ -115,8 +125,7 @@ export default function ReportarIncidencia() {
     }
   }
 
-
-  // Seleccionar hasta tres fotografías.
+  // Seleccionar hasta tres fotografías de la incidencia.
   function seleccionarFotos(archivos: FileList | null) {
     if (!archivos) return
 
@@ -131,14 +140,17 @@ export default function ReportarIncidencia() {
     setFotos(seleccionadas)
     setError('')
   }
+
   // Eliminar una fotografía seleccionada.
   function eliminarFoto(indice: number) {
     setFotos((anteriores) =>
       anteriores.filter((_, posicion) => posicion !== indice)
     )
 
-    // Limpiar el selector para permitir volver a elegir archivos.
-    const inputFotos = document.getElementById('fotos') as HTMLInputElement | null
+    const inputFotos = document.getElementById(
+      'fotos'
+    ) as HTMLInputElement | null
+
     if (inputFotos) {
       inputFotos.value = ''
     }
@@ -173,7 +185,6 @@ export default function ReportarIncidencia() {
     setResultado(null)
 
     try {
-      // Recuperar el JWT guardado durante el login.
       const token = obtenerToken()
 
       if (!token) {
@@ -182,7 +193,6 @@ export default function ReportarIncidencia() {
         )
       }
 
-      // Enviar la incidencia con autorización Bearer.
       const respuesta = await fetch(
         `${API_URL}/api/incidencias/`,
         {
@@ -219,13 +229,11 @@ export default function ReportarIncidencia() {
         )
       }
 
-      // Obtener la incidencia creada por FastAPI.
       const datos: Incidencia = await respuesta.json()
 
       setResultado(datos)
       setDescripcion('')
       setFotos([])
-
     } catch (errorDesconocido) {
       setError(
         errorDesconocido instanceof Error
@@ -237,32 +245,44 @@ export default function ReportarIncidencia() {
     }
   }
 
-
   return (
     <main className="min-h-screen bg-surface px-3 py-6 text-on-surface sm:px-6 sm:py-8">
       <div className="mx-auto max-w-5xl space-y-5">
+
+        {/* Encabezado */}
         <header className="rounded-xl border border-[#D5E2EF] border-l-4 border-l-primary bg-white p-5 shadow-sm sm:p-6">
           <p className="text-sm font-bold uppercase tracking-wide text-primary">
             Operaciones · Reporte de incidencias
           </p>
+
           <h1 className="mt-2 text-2xl font-bold text-on-surface sm:text-3xl">
             Reportar incidencia
           </h1>
+
           <p className="mt-2 text-base text-on-surface-variant">
             Identificá la máquina, describí la falla y registrá el reporte.
           </p>
         </header>
 
-        <form onSubmit={reportarIncidencia} className="space-y-5">
+        <form
+          onSubmit={reportarIncidencia}
+          className="space-y-5"
+        >
           <div className="grid items-start gap-5 lg:grid-cols-2">
+
+            {/* Identificación de máquina */}
             <section className="rounded-xl border border-[#D5E2EF] bg-white p-5 shadow-sm sm:p-6">
               <h2 className="mb-5 text-lg font-bold text-on-surface">
                 IDENTIFICACIÓN DE MÁQUINA
               </h2>
 
-              <label htmlFor="maquina" className="mb-2 block text-base font-semibold">
+              <label
+                htmlFor="maquina"
+                className="mb-2 block text-base font-semibold"
+              >
                 Código de la máquina
               </label>
+
               <input
                 id="maquina"
                 type="text"
@@ -273,7 +293,7 @@ export default function ReportarIncidencia() {
                   setResultado(null)
                   setError('')
                 }}
-                placeholder="Ejemplo: MAQ-USO-DEMO"
+                placeholder="Ejemplo: MAQ-001"
                 spellCheck={false}
                 autoCapitalize="off"
                 autoComplete="off"
@@ -282,62 +302,104 @@ export default function ReportarIncidencia() {
                 required
               />
 
+              {/* Botón para abrir el lector QR */}
+              <button
+                type="button"
+                onClick={() => setMostrarEscaner(true)}
+                disabled={consultando || enviando || mostrarEscaner}
+                className="mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border border-primary px-5 py-3 text-base font-bold text-primary hover:bg-surface-container disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <ScanLine size={22} />
+                Escanear QR
+              </button>
+
+              {/* Cámara para identificar la máquina */}
+              {mostrarEscaner && (
+                <div className="mt-4">
+                  <EscanerQR
+                    onDetectar={manejarQRDetectado}
+                    onCerrar={() => setMostrarEscaner(false)}
+                  />
+                </div>
+              )}
+
+              {/* Validación de máquina */}
               <button
                 type="button"
                 onClick={consultarMaquina}
-                disabled={consultando || enviando}
-                className="mt-3 min-h-12 w-full rounded-lg bg-primary px-5 py-3 text-base font-bold text-white hover:bg-[#004B76] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:bg-slate-400"
+                disabled={consultando || enviando || mostrarEscaner}
+                className="mt-3 min-h-12 w-full rounded-lg bg-primary px-5 py-3 text-base font-bold text-white hover:bg-[#004B76] disabled:cursor-not-allowed disabled:bg-slate-400"
               >
-                {consultando ? 'Consultando máquina...' : 'Validar máquina'}
+                {consultando
+                  ? 'Consultando máquina...'
+                  : 'Validar máquina'}
               </button>
 
+              {/* Información recuperada del backend */}
               {maquina && (
                 <div className="mt-5 rounded-xl border border-[#B8D7EB] bg-surface-container-low p-4 sm:p-5">
                   <p className="text-sm font-bold text-primary">
                     ✓ MÁQUINA IDENTIFICADA
                   </p>
+
                   <h3 className="mt-2 text-xl font-bold text-on-surface">
                     {maquina.nombre}
                   </h3>
-                  <p className="mt-2 text-base text-on-surface-variant">
-                    {[maquina.linea, maquina.area].filter(Boolean).join(' · ')}
-                  </p>
-                  <div className="mt-4 rounded-lg border border-[#D5E2EF] bg-white p-4">
-                    <p className="text-sm font-semibold text-on-surface-variant">
-                      CÓDIGO DE ACTIVO
+
+                  <div className="mt-4 space-y-3 rounded-lg border border-[#D5E2EF] bg-white p-4">
+                    <p>
+                      <strong>Código:</strong> {maquina.codigo}
                     </p>
-                    <p className="mt-1 break-all font-mono text-base font-bold text-on-surface">
-                      {maquina.codigo}
+
+                    <p>
+                      <strong>Nombre:</strong> {maquina.nombre}
                     </p>
-                    <p className="mt-2 text-sm text-on-surface-variant">
-                      Tag: {maquina.tag}
+
+                    <p>
+                      <strong>Tag:</strong> {maquina.tag}
                     </p>
-                    {maquina.estado && (
-                      <p className="mt-1 text-sm text-on-surface-variant">
-                        Estado: {maquina.estado}
-                      </p>
-                    )}
+
+                    <p>
+                      <strong>Línea:</strong> {maquina.linea || 'No informada'}
+                    </p>
+
+                    <p>
+                      <strong>Área:</strong> {maquina.area || 'No informada'}
+                    </p>
+
+                    <p>
+                      <strong>Estado:</strong> {maquina.estado || 'No informado'}
+                    </p>
                   </div>
                 </div>
               )}
             </section>
 
+            {/* Descripción de la falla */}
             <section className="rounded-xl border border-[#D5E2EF] bg-white p-5 shadow-sm sm:p-6">
               <div className="mb-5 flex flex-wrap items-center justify-between gap-2">
                 <h2 className="text-lg font-bold text-on-surface">
                   DESCRIPCIÓN DE LA FALLA
                 </h2>
+
                 <span className="text-sm font-medium text-on-surface-variant">
                   {descripcion.length} / 250
                 </span>
               </div>
-              <label htmlFor="descripcion" className="mb-2 block text-base font-semibold">
+
+              <label
+                htmlFor="descripcion"
+                className="mb-2 block text-base font-semibold"
+              >
                 ¿Qué problema detectaste?
               </label>
+
               <textarea
                 id="descripcion"
                 value={descripcion}
-                onChange={(evento) => setDescripcion(evento.target.value)}
+                onChange={(evento) =>
+                  setDescripcion(evento.target.value)
+                }
                 minLength={5}
                 maxLength={250}
                 disabled={enviando}
@@ -345,17 +407,24 @@ export default function ReportarIncidencia() {
                 className="min-h-36 w-full rounded-lg border border-outline bg-surface-container-low px-4 py-3 text-base text-on-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
                 required
               />
+
               <p className="mt-2 text-sm text-on-surface-variant">
                 Usá al menos 5 caracteres para describir la falla.
               </p>
 
-              <label htmlFor="turno" className="mb-2 mt-5 block text-base font-semibold">
+              <label
+                htmlFor="turno"
+                className="mb-2 mt-5 block text-base font-semibold"
+              >
                 Turno de trabajo
               </label>
+
               <select
                 id="turno"
                 value={turno}
-                onChange={(evento) => setTurno(evento.target.value as Turno)}
+                onChange={(evento) =>
+                  setTurno(evento.target.value as Turno)
+                }
                 disabled={enviando}
                 className="min-h-12 w-full rounded-lg border border-outline bg-white px-4 py-3 text-base text-on-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
                 required
@@ -367,22 +436,30 @@ export default function ReportarIncidencia() {
             </section>
           </div>
 
+          {/* Registro fotográfico */}
           <section className="rounded-xl border border-[#D5E2EF] bg-white p-5 shadow-sm sm:p-6">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h2 className="text-lg font-bold text-on-surface">
                 REGISTRO FOTOGRÁFICO
               </h2>
+
               <span className="text-sm font-semibold text-on-surface-variant">
                 Opcional · hasta 3
               </span>
             </div>
+
             <p className="mt-3 rounded-lg border border-[#D5E2EF] bg-surface-container-low p-3 text-sm text-on-surface-variant">
-              Esta función está en desarrollo: las fotos seleccionadas no se envían ni se guardan con la incidencia.
+              Esta función está en desarrollo: las fotos seleccionadas
+              no se envían ni se guardan con la incidencia.
             </p>
 
-            <label htmlFor="fotos" className="mb-2 mt-4 block text-base font-semibold">
+            <label
+              htmlFor="fotos"
+              className="mb-2 mt-4 block text-base font-semibold"
+            >
               Seleccionar fotografías (solo vista previa de nombres)
             </label>
+
             <input
               id="fotos"
               type="file"
@@ -390,12 +467,16 @@ export default function ReportarIncidencia() {
               multiple
               disabled={enviando}
               onChange={(evento) => {
-                if (evento.target.files && evento.target.files.length > 3) {
+                if (
+                  evento.target.files &&
+                  evento.target.files.length > 3
+                ) {
                   setError('Podés seleccionar hasta 3 fotografías.')
                   setFotos([])
                   evento.target.value = ''
                   return
                 }
+
                 seleccionarFotos(evento.target.files)
               }}
               className="min-h-12 w-full rounded-lg border border-outline bg-white p-3 text-base text-on-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
@@ -422,10 +503,16 @@ export default function ReportarIncidencia() {
             ))}
           </section>
 
+          {/* Validaciones previas */}
           <section className="rounded-xl border border-[#B8D7EB] bg-surface-container-low p-5">
-            <h2 className="font-bold text-primary">ANTES DE REGISTRAR</h2>
+            <h2 className="font-bold text-primary">
+              ANTES DE REGISTRAR
+            </h2>
+
             <p className="mt-2 text-base text-on-surface-variant">
-              Verificá el código de la máquina, la descripción y el turno. El sistema devolverá el identificador del reporte cuando se guarde.
+              Verificá el código de la máquina, la descripción y el turno.
+              El sistema devolverá el identificador del reporte
+              cuando se guarde.
             </p>
           </section>
 
@@ -440,13 +527,21 @@ export default function ReportarIncidencia() {
 
           <button
             type="submit"
-            disabled={enviando || consultando || !maquina || maquina.codigo !== codigoMaquina.trim()}
-            className="min-h-14 w-full rounded-lg bg-primary px-5 py-3 text-lg font-bold text-white shadow-sm hover:bg-[#004B76] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:bg-slate-400"
+            disabled={
+              enviando ||
+              consultando ||
+              !maquina ||
+              maquina.codigo !== codigoMaquina.trim()
+            }
+            className="min-h-14 w-full rounded-lg bg-primary px-5 py-3 text-lg font-bold text-white shadow-sm hover:bg-[#004B76] disabled:cursor-not-allowed disabled:bg-slate-400"
           >
-            {enviando ? 'Guardando incidencia...' : 'Reportar incidencia'}
+            {enviando
+              ? 'Guardando incidencia...'
+              : 'Reportar incidencia'}
           </button>
         </form>
 
+        {/* Resultado del registro */}
         {resultado && (
           <section
             role="status"
@@ -455,23 +550,49 @@ export default function ReportarIncidencia() {
             <h2 className="text-xl font-bold text-[#14633D]">
               ✓ Incidencia registrada correctamente
             </h2>
+
             <p className="mt-2 text-base text-[#14633D]">
-              El reporte fue registrado. Estos son los datos confirmados por el servidor.
+              El reporte fue registrado. Estos son los datos
+              confirmados por el servidor.
             </p>
+
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <p><strong>ID:</strong> {resultado.id}</p>
-              {resultado.codigo && <p><strong>Código:</strong> {resultado.codigo}</p>}
-              <p><strong>Estado:</strong> {resultado.estado}</p>
-              <p><strong>Máquina:</strong> {resultado.codigo_maquina}</p>
-              <p><strong>Turno:</strong> {resultado.turno}</p>
+              <p>
+                <strong>ID:</strong> {resultado.id}
+              </p>
+
+              {resultado.codigo && (
+                <p>
+                  <strong>Código:</strong> {resultado.codigo}
+                </p>
+              )}
+
+              <p>
+                <strong>Estado:</strong> {resultado.estado}
+              </p>
+
+              <p>
+                <strong>Máquina:</strong> {resultado.codigo_maquina}
+              </p>
+
+              <p>
+                <strong>Turno:</strong> {resultado.turno}
+              </p>
+
               <p>
                 <strong>Fecha y hora:</strong>{' '}
-                {new Date(resultado.fecha_hora).toLocaleString('es-AR', {
-                  dateStyle: 'short',
-                  timeStyle: 'medium',
-                })}
+                {new Date(resultado.fecha_hora).toLocaleString(
+                  'es-AR',
+                  {
+                    dateStyle: 'short',
+                    timeStyle: 'medium',
+                  }
+                )}
               </p>
-              <p className="sm:col-span-2"><strong>Descripción:</strong> {resultado.descripcion}</p>
+
+              <p className="sm:col-span-2">
+                <strong>Descripción:</strong> {resultado.descripcion}
+              </p>
             </div>
           </section>
         )}

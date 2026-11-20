@@ -8,6 +8,8 @@ from app.services.recepciones import registrar_recepcion_service
 from app.models.compras import PedidoCompra, PedidoItem
 from app.models.stock import Repuesto
 
+from app.auth_dependencies import requiere_roles
+
 #rutas de la recepcion, agrupa los endpoints
 router = APIRouter(tags=["Recepciones"])
 
@@ -44,7 +46,8 @@ class RecepcionResponse(BaseModel):
 @router.post(
     "/pedidos/{pedidoId}/recepciones",
     status_code=201,
-    response_model=RecepcionResponse
+    response_model=RecepcionResponse,
+    dependencies=[Depends(requiere_roles("encargado"))]
 ) #201 indica que el registro se creo correctamente
 def registrar_recepcion( #recepcionrequet recibe datos y los valida automaticamente
     datos: RecepcionRequest,
@@ -61,7 +64,9 @@ def registrar_recepcion( #recepcionrequet recibe datos y los valida automaticame
     )
 
 #Consulta un pedido de compra por id
-@router.get("/pedidos/{pedidoId}")
+@router.get("/pedidos/{pedidoId}",
+    dependencies=[Depends(requiere_roles("encargado"))]
+)
 def obtener_pedido(
     pedidoId: int = Path(ge=1),
     session: Session = Depends(get_session)

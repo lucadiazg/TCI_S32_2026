@@ -131,7 +131,18 @@ export default function ReportarIncidencia() {
     setFotos(seleccionadas)
     setError('')
   }
+  // Eliminar una fotografía seleccionada.
+  function eliminarFoto(indice: number) {
+    setFotos((anteriores) =>
+      anteriores.filter((_, posicion) => posicion !== indice)
+    )
 
+    // Limpiar el selector para permitir volver a elegir archivos.
+    const inputFotos = document.getElementById('fotos') as HTMLInputElement | null
+    if (inputFotos) {
+      inputFotos.value = ''
+    }
+  }
 
   // Registrar incidencia autenticada.
   async function reportarIncidencia(
@@ -390,16 +401,25 @@ export default function ReportarIncidencia() {
               className="min-h-12 w-full rounded-lg border border-outline bg-white p-3 text-base text-on-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             />
 
-            {fotos.length > 0 && (
-              <div className="mt-3 rounded-lg bg-surface-container-low p-4">
-                <p className="font-semibold">Archivos seleccionados (sin guardar):</p>
-                {fotos.map((foto, indice) => (
-                  <p key={`${foto.name}-${indice}`} className="mt-1 break-words text-sm">
-                    {foto.name}
-                  </p>
-                ))}
+            {fotos.map((foto, indice) => (
+              <div
+                key={`${foto.name}-${indice}`}
+                className="mt-2 flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white p-3"
+              >
+                <span className="min-w-0 break-all text-sm">
+                  {foto.name}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() => eliminarFoto(indice)}
+                  disabled={enviando}
+                  className="shrink-0 rounded-lg border border-red-300 px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50"
+                >
+                  Eliminar
+                </button>
               </div>
-            )}
+            ))}
           </section>
 
           <section className="rounded-xl border border-[#B8D7EB] bg-surface-container-low p-5">

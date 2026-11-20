@@ -15,6 +15,7 @@ import MenuPrincipal from './pages/MenuPrincipal'
 import ReportarIncidencia from './pages/ReportarIncidencia'
 import CargarStockRecibido from './pages/CargarStockRecibido'
 import RegistrarUsoRepuesto from './pages/RegistrarUsoRepuesto'
+import NavegacionPantallas from './components/NavegacionPantallas'
 
 import {
   cerrarSesion,
@@ -106,7 +107,16 @@ function Panel({
         </div>
       </header>
 
-      <div>{children}</div>
+      <div className="flex min-h-[calc(100vh-80px)] flex-col">
+        <div className="flex-1">
+          {children}
+        </div>
+
+        {titulo !== 'Menú principal' &&
+          titulo !== 'Panel de Gerencia' && (
+            <NavegacionPantallas rol={usuario.rol} />
+          )}
+          </div>
     </div>
   )
 }

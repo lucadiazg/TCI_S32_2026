@@ -51,13 +51,21 @@ headers.set('Authorization', `Bearer ${token}`)
   const data = await response.json().catch(() => null)
 
   if (!response.ok) {
-    const errorData = data as ErrorResponse | null
+    const errorData = data as {
+    detail?: string | Array<{ msg?: string }>
+    mensaje?: string
+  }  | null
 
-    throw new HttpError(
-      response.status,
+    const detalle = errorData?.detail
+
+    const mensaje =
+      (typeof detalle === 'string' ? detalle : undefined) ??
+      (Array.isArray(detalle)
+        ? detalle.map((error) => error.msg ?? 'Dato inválido').join('. ')
+        : undefined) ??
       errorData?.mensaje ??
-        `La solicitud falló con código ${response.status}`,
-    )
+        `La solicitud falló con código ${response.status}`
+    throw new HttpError(response.status, mensaje)
   }
 
   return data as T

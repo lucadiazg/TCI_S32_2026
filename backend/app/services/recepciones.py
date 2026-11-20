@@ -114,6 +114,28 @@ def registrar_recepcion_service(
     #Prepara el movimiento para guardarlo
     session.add(movimiento)
 
+
+    # Busca todos los repuestos que pertenecen al pedido
+    items_pedido = session.exec(
+        select(PedidoItem).where(
+            PedidoItem.pedido_id == pedido_id
+        )
+    ).all()
+
+    # Comprueba si todos los repuestos fueron recibidos
+    pedido_completo = bool(items_pedido) and all(
+        item_pedido.cantidad_recibida >= item_pedido.cantidad_solicitada
+        for item_pedido in items_pedido
+    )
+
+    # Actualiza el estado de la orden
+    if pedido_completo:
+        pedido.estado = "completado"
+    else:
+        pedido.estado = "pendiente"
+
+    session.add(pedido)
+
     
     #guarda todos los cambios en PostgreSQL
     try:

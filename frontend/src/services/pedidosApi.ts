@@ -5,6 +5,8 @@ import type {
   RecepcionResponse,
 } from '../types/pedidos'
 
+import { obtenerToken } from './authApi'
+
 const API_URL = (
   import.meta.env.VITE_API_URL ?? 'http://127.0.0.1:4010'
 ).replace(/\/$/, '')
@@ -29,6 +31,17 @@ async function apiRequest<T>(
   if (options.body) {
     headers.set('Content-Type', 'application/json')
   }
+
+  const token = obtenerToken()
+
+if (!token) {
+  throw new HttpError(
+    401,
+    'No hay una sesión activa. Volvé a iniciar sesión.',
+  )
+}
+
+headers.set('Authorization', `Bearer ${token}`)
 
   const response = await fetch(`${API_URL}${path}`, {
     ...options,

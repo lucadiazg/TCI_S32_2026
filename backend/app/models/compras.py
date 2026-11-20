@@ -39,3 +39,31 @@ class Recepcion(SQLModel, table=True):
     fecha_hora: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc)
     )
+
+class SolicitudCompra(SQLModel, table=True):
+    __tablename__ = "solicitudes_compra"
+
+    id: int | None = Field(default=None, primary_key=True)
+
+    codigo_repuesto: str = Field(
+        foreign_key="repuestos.codigo",
+        index=True
+    )
+
+    cantidad_solicitada: int = Field(ge=1)
+
+    motivo: str
+
+    estado: str = Field(default="pendiente")
+    pedido_id: int | None = Field(
+    default=None,
+    foreign_key="pedidos_compra.id"
+)
+
+    usuario_solicitante_id: int = Field(
+        foreign_key="usuarios.id"
+    )
+
+    fecha_hora: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc)
+    )

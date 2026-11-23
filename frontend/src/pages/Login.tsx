@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Eye, EyeOff } from 'lucide-react'
+import HCaptcha from '@hcaptcha/react-hcaptcha'
 
 import {
   cerrarSesion,
@@ -22,15 +23,20 @@ export default function Login({ onLogin }: LoginProps) {
   const [mostrarPassword, setMostrarPassword] = useState(false)
   const [error, setError] = useState('')
   const [cargando, setCargando] = useState(false)
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
 
   async function manejarLogin(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault()
 
     setError('')
+    if (!captchaToken) {
+      setError('Por favor, completá la verificación de seguridad.')
+      return
+    }
     setCargando(true)
 
     try {
-      await iniciarSesion(legajo, password)
+      await iniciarSesion(legajo, password, captchaToken)
 
       const usuario = await obtenerPerfil()
 
@@ -168,6 +174,20 @@ export default function Login({ onLogin }: LoginProps) {
                   )}
                 </button>
               </div>
+            </div>
+            <div className="flex justify-center">
+              <HCaptcha
+                sitekey={import.meta.env.VITE_HCAPTCHA_SITEKEY}
+                onVerify={(token) => {
+                  setCaptchaToken(token)
+                  setError('')
+                }}
+                onExpire={() => setCaptchaToken(null)}
+                onError={() => {
+                  setCaptchaToken(null)
+                  setError('No se pudo cargar el captcha. Intentá nuevamente.')
+                }}
+              />
             </div>
 
             {error && (

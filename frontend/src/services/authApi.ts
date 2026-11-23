@@ -27,14 +27,15 @@ const TOKEN_KEY = 'pharmaplant_token'
 // Iniciar sesión con legajo y contraseña
 export async function iniciarSesion(
   legajo: string,
-  password: string
+  password: string,
+  captchaToken: string
 ): Promise<string> {
   const respuesta = await fetch(`${API_URL}/api/auth/login`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ legajo, password }),
+    body: JSON.stringify({ legajo, password, captcha_token: captchaToken, }),
   })
 
   if (!respuesta.ok) {

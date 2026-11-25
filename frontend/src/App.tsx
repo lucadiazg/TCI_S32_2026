@@ -15,6 +15,8 @@ import MenuPrincipal from './pages/MenuPrincipal'
 import ReportarIncidencia from './pages/ReportarIncidencia'
 import CargarStockRecibido from './pages/CargarStockRecibido'
 import RegistrarUsoRepuesto from './pages/RegistrarUsoRepuesto'
+import Compras from './pages/Compras'
+import Reservas from './pages/Reservas'
 import NavegacionPantallas from './components/NavegacionPantallas'
 
 import {
@@ -34,14 +36,16 @@ function RutaProtegida({
   children,
 }: {
   usuario: Usuario | null
-  rol: RolUsuario
+  rol: RolUsuario | readonly RolUsuario[]
   children: ReactNode
 }) {
   if (!usuario) {
     return <Navigate to="/login" replace />
   }
 
-  if (usuario.rol !== rol) {
+  const permitido = typeof rol === 'string' ? usuario.rol === rol : rol.includes(usuario.rol)
+
+  if (!permitido) {
     return (
       <Navigate
         to={obtenerRutaPorRol(usuario.rol)}
@@ -276,6 +280,32 @@ function AppRoutes() {
                 onLogout={manejarLogout}
               >
                 <CargarStockRecibido />
+              </Panel>
+            )}
+          </RutaProtegida>
+        }
+      />
+
+      <Route
+        path="/compras"
+        element={
+          <RutaProtegida usuario={usuario} rol={['mantenimiento', 'encargado']}>
+            {usuario && (
+              <Panel usuario={usuario} titulo="Compras" onLogout={manejarLogout}>
+                <Compras esEncargado={usuario.rol === 'encargado'} />
+              </Panel>
+            )}
+          </RutaProtegida>
+        }
+      />
+
+      <Route
+        path="/reservas"
+        element={
+          <RutaProtegida usuario={usuario} rol="encargado">
+            {usuario && (
+              <Panel usuario={usuario} titulo="Reservas" onLogout={manejarLogout}>
+                <Reservas />
               </Panel>
             )}
           </RutaProtegida>

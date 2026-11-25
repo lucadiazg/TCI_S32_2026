@@ -27,6 +27,21 @@ const opciones = [
   },
 ]
 
+const opcionesNuevas = [
+  {
+    titulo: 'Compras',
+    descripcion: 'Solicitar compras o gestionar pedidos y alertas según tu rol',
+    ruta: '/compras',
+    roles: ['mantenimiento', 'encargado'],
+  },
+  {
+    titulo: 'Reservas',
+    descripcion: 'Reservar unidades de un repuesto',
+    ruta: '/reservas',
+    roles: ['encargado'],
+  },
+]
+
 export default function MenuPrincipal({ rol }: Props) {
   const navigate = useNavigate()
 
@@ -41,7 +56,7 @@ export default function MenuPrincipal({ rol }: Props) {
       </p>
 
       <div className="flex flex-col gap-4">
-        {opciones.map((opcion) => {
+        {[...opciones, ...opcionesNuevas.filter((opcion) => opcion.roles.includes(rol))].map((opcion) => {
           const permitido = opcion.roles.includes(rol)
 
           return (

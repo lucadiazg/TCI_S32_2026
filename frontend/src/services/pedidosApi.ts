@@ -1,5 +1,4 @@
 import type {
-  ErrorResponse,
   PedidoCompra,
   RecepcionRequest,
   RecepcionResponse,

@@ -17,6 +17,7 @@ import CargarStockRecibido from './pages/CargarStockRecibido'
 import RegistrarUsoRepuesto from './pages/RegistrarUsoRepuesto'
 import Compras from './pages/Compras'
 import Reservas from './pages/Reservas'
+import Gerencia from './pages/Gerencia'
 import NavegacionPantallas from './components/NavegacionPantallas'
 
 import {
@@ -326,16 +327,7 @@ function AppRoutes() {
                 titulo="Panel de Gerencia"
                 onLogout={manejarLogout}
               >
-                <main className="mx-auto max-w-5xl p-8">
-                  <h2 className="text-2xl font-bold text-slate-800">
-                    Dashboard de Gerencia
-                  </h2>
-
-                  <p className="mt-3 text-slate-600">
-                    Panel de indicadores y consultas.
-                    Próximamente conectaremos los datos reales.
-                  </p>
-                </main>
+                <Gerencia />
               </Panel>
             )}
           </RutaProtegida>

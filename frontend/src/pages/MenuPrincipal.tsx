@@ -62,7 +62,7 @@ export default function MenuPrincipal({ rol }: Props) {
       </p>
 
       <div className="flex flex-col gap-4">
-        {[...opciones, ...opcionesNuevas.filter((opcion) => opcion.roles.includes(rol))].map((opcion) => {
+        {[...opciones, ...opcionesNuevas].map((opcion) => {
           const permitido = opcion.roles.includes(rol)
 
           return (

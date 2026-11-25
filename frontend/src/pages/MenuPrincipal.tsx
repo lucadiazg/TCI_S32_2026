@@ -40,6 +40,12 @@ const opcionesNuevas = [
     ruta: '/reservas',
     roles: ['encargado'],
   },
+  {
+    titulo: 'Estadísticas',
+    descripcion: 'Consultar indicadores de mantenimiento e inventario',
+    ruta: '/gerencia',
+    roles: ['gerencia'],
+  },
 ]
 
 export default function MenuPrincipal({ rol }: Props) {

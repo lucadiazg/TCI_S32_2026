@@ -36,6 +36,7 @@ services:
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:?Definir JWT_SECRET_KEY}
       JWT_ALGORITHM: HS256
       JWT_EXPIRE_MINUTES: "60"
+      HCAPTCHA_SECRET: ${HCAPTCHA_SECRET}
     depends_on:
       postgres:
         condition: service_healthy
@@ -49,6 +50,7 @@ services:
     environment:
       VITE_API_URL: http://localhost:8001
       VITE_PRISM_STATUS: ""
+      VITE_HCAPTCHA_SITEKEY: ${VITE_HCAPTCHA_SITEKEY}
     depends_on:
       - backend
 

@@ -1,13 +1,27 @@
 import { useEffect, useState } from 'react'
-
 import { obtenerEstadisticasGerencia } from '../services/gerenciaApi'
 import type { EstadisticasGerencia } from '../types/gerencia'
+import GraficoEvolucionIncidencias from '../components/GraficoEvolucionIncidencias'
+import GraficoIncidenciasPorTurno from '../components/GraficoIncidenciasPorTurno'
 
-const indicadores: { campo: keyof EstadisticasGerencia; etiqueta: string }[] = [
+type CampoIndicador = keyof Pick<
+  EstadisticasGerencia,
+  | 'incidenciasAbiertas'
+  | 'repuestosBajoUmbral'
+  | 'pedidosPendientes'
+  | 'reservasActivas'
+  | 'unidadesConsumidas'
+  | 'incidenciasCerradas'
+  | 'pedidosCompletos'
+>
+
+const indicadores: { campo: CampoIndicador; etiqueta: string }[] = [
   { campo: 'incidenciasAbiertas', etiqueta: 'Incidencias abiertas' },
+  { campo: 'incidenciasCerradas', etiqueta: 'Incidencias cerradas' },
   { campo: 'repuestosBajoUmbral', etiqueta: 'Repuestos bajo umbral' },
-  { campo: 'pedidosPendientes', etiqueta: 'Pedidos pendientes' },
   { campo: 'reservasActivas', etiqueta: 'Reservas activas' },
+  { campo: 'pedidosPendientes', etiqueta: 'Pedidos pendientes' },
+  { campo: 'pedidosCompletos', etiqueta: 'Pedidos completados' },
   { campo: 'unidadesConsumidas', etiqueta: 'Unidades consumidas' },
 ]
 
@@ -23,12 +37,20 @@ const formatoNumero = new Intl.NumberFormat('es-AR')
 export default function Gerencia() {
   const [consulta, setConsulta] = useState(0)
   const [estado, setEstado] = useState<Estado>({ tipo: 'cargando' })
+  // Fechas seleccionadas por el usuario
+  const [desde, setDesde] = useState('')
+  const [hasta, setHasta] = useState('')
+  // Fechas aplicadas a la consulta
+  const [filtroDesde, setFiltroDesde] = useState('')
+  const [filtroHasta, setFiltroHasta] = useState('')
+  // Mensaje de validación del filtro
+  const [errorFiltro, setErrorFiltro] = useState('')
 
   useEffect(() => {
     const controlador = new AbortController()
     const { signal } = controlador
 
-    obtenerEstadisticasGerencia(signal)
+    obtenerEstadisticasGerencia(signal, filtroDesde, filtroHasta)
       .then((datos) => {
         if (signal.aborted) return
         setEstado(datos === null ? { tipo: 'noDisponible' } : { tipo: 'listo', datos })
@@ -40,13 +62,36 @@ export default function Gerencia() {
       })
 
     return () => controlador.abort()
-  }, [consulta])
+  }, [consulta, filtroDesde, filtroHasta])
 
   function volverAConsultar() {
     setEstado({ tipo: 'cargando' })
     setConsulta((actual) => actual + 1)
   }
+  function aplicarFiltro() {
+    if (!desde || !hasta) {
+      setErrorFiltro('Debe indicar ambas fechas.')
+      return
+    }
 
+    if (desde > hasta) {
+      setErrorFiltro('La fecha desde no puede ser posterior a la fecha hasta.')
+      return
+    }
+
+    setErrorFiltro('')
+    setFiltroDesde(desde)
+    setFiltroHasta(hasta)
+    volverAConsultar()
+  }
+  function verTotal() {
+    setDesde('')
+    setHasta('')
+    setFiltroDesde('')
+    setFiltroHasta('')
+    setErrorFiltro('')
+    volverAConsultar()
+  }
   return (
     <main className="bg-surface px-3 py-6 text-on-surface sm:px-6 sm:py-8">
       <div className="mx-auto max-w-5xl space-y-5">
@@ -54,6 +99,65 @@ export default function Gerencia() {
           <h1 className="text-2xl font-bold sm:text-3xl">Estadísticas de la planta</h1>
           <p className="mt-2 text-on-surface-variant">Indicadores generales de mantenimiento e inventario.</p>
         </header>
+        <section className={tarjeta}>
+          <h2 className="text-lg font-bold">Período de consulta</h2>
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <label className="flex flex-col gap-2">
+              <span className="font-semibold">Desde</span>
+              <input
+                type="date"
+                value={desde}
+                onChange={(e) => setDesde(e.target.value)}
+                className="rounded-lg border border-outline p-3"
+              />
+            </label>
+
+            <label className="flex flex-col gap-2">
+              <span className="font-semibold">Hasta</span>
+              <input
+                type="date"
+                value={hasta}
+                onChange={(e) => setHasta(e.target.value)}
+                className="rounded-lg border border-outline p-3"
+              />
+            </label>
+          </div>
+
+          <div className="mt-4 flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={aplicarFiltro}
+              className="rounded-lg bg-primary px-5 py-3 font-bold text-white"
+            >
+              Aplicar filtro
+            </button>
+
+            <button
+              type="button"
+              onClick={verTotal}
+              className="rounded-lg border border-primary px-5 py-3 font-bold text-primary"
+            >
+              Ver total
+            </button>
+          </div>
+
+          {errorFiltro && (
+            <p role="alert" className="mt-3 text-sm text-red-700">
+              {errorFiltro}
+            </p>
+          )}
+          <p className="mt-4 text-sm text-on-surface-variant">
+          {filtroDesde && filtroHasta
+            ? `Período aplicado: ${filtroDesde.split('-').reverse().join('/')} al ${filtroHasta.split('-').reverse().join('/')}`
+            : 'Mostrando el total histórico.'}
+          </p>
+
+          <p className="mt-2 text-sm text-on-surface-variant">
+            Los repuestos bajo umbral y las reservas activas
+            representan el estado actual del inventario,
+            independientemente del período seleccionado.
+          </p>
+        </section>
 
         <div role="status">
           {estado.tipo === 'cargando' && (
@@ -94,6 +198,19 @@ export default function Gerencia() {
               </div>
             ))}
           </dl>
+        )}
+        {/* Gráfico de evolución de incidencias */}
+        {estado.tipo === 'listo' && (
+          <GraficoEvolucionIncidencias
+            datos={estado.datos.evolucionIncidencias}
+            agrupacion={estado.datos.agrupacionIncidencias}
+          />
+        )}
+        {/* Gráfico de incidencias por turno */}
+        {estado.tipo === 'listo' && (
+          <GraficoIncidenciasPorTurno
+            datos={estado.datos.incidenciasPorTurno}
+          />
         )}
       </div>
     </main>

@@ -2,6 +2,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field, field_validator
 from sqlmodel import Session, select
+from datetime import datetime, timezone
 
 from app.auth_dependencies import (
     obtener_usuario_actual,
@@ -183,6 +184,12 @@ def actualizar_estado_incidencia(
             status_code=400,
             detail="Estado de incidencia no válido"
         )
+
+    # Registrar la fecha de cierre de la incidencia
+    if datos.estado == "resuelta" and incidencia.estado != "resuelta":
+        incidencia.fecha_cierre = datetime.now(timezone.utc)
+    elif datos.estado != "resuelta":
+        incidencia.fecha_cierre = None
 
     incidencia.estado = datos.estado
 

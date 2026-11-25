@@ -42,6 +42,7 @@ class Incidencia(SQLModel, table=True):
     fecha_hora: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc)
     )
+    fecha_cierre: datetime | None = Field(default=None)
 
 
 class Reparacion(SQLModel, table=True):

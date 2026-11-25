@@ -22,6 +22,21 @@ const opciones = [
     ruta: '/encargado',
     roles: ['encargado'],
   },
+    {
+    titulo: 'Compras',
+    ruta: '/compras',
+    roles: ['mantenimiento', 'encargado'],
+  },
+  {
+    titulo: 'Reservas',
+    ruta: '/reservas',
+    roles: ['encargado'],
+  },
+  {
+    titulo: 'Estadísticas',
+    ruta: '/gerencia',
+    roles: ['gerencia'],
+  },
 ]
 
 export default function NavegacionPantallas({ rol }: Props) {

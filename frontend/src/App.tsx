@@ -117,8 +117,7 @@ function Panel({
           {children}
         </div>
 
-        {titulo !== 'Menú principal' &&
-          titulo !== 'Panel de Gerencia' && (
+        {titulo !== 'Menú principal' &&(
             <NavegacionPantallas rol={usuario.rol} />
           )}
           </div>

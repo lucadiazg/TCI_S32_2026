@@ -10,6 +10,7 @@ from app.controllers.reparaciones import router as reparaciones_router
 from app.controllers.maquinas import router as maquinas_router
 from app.controllers.compras import router as compras_router
 from app.controllers.reservas import router as reservas_router
+from app.controllers.gerencia import router as gerencia_router
 
 app = FastAPI(
     title="PharmaPlant CORE API",
@@ -40,6 +41,7 @@ app.include_router(reparaciones_router)
 app.include_router(maquinas_router)
 app.include_router(compras_router)
 app.include_router(reservas_router)
+app.include_router(gerencia_router)
 
 @app.get("/api/health")
 def health() -> dict[str, str]:

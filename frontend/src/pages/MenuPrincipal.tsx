@@ -11,7 +11,7 @@ const opciones = [
     titulo: 'Incidencias',
     descripcion: 'Reportar incidencias',
     ruta: '/operario',
-    roles: ['operario'],
+    roles: ['operario', 'mantenimiento'],
   },
   {
     titulo: 'Repuestos',
@@ -70,7 +70,9 @@ export default function MenuPrincipal({ rol }: Props) {
               key={opcion.ruta}
               type="button"
               disabled={!permitido}
-              onClick={() => navigate(opcion.ruta)}
+              onClick={() => navigate(opcion.ruta=== '/operario' && rol === 'mantenimiento'
+                ? '/gestionar-incidencias'
+                : opcion.ruta)}
               className={`flex min-h-28 w-full items-center gap-5 rounded-xl border p-6 text-left shadow-sm transition ${
                 permitido
                   ? 'border-slate-200 bg-white hover:border-blue-500 hover:shadow-md'
@@ -84,8 +86,10 @@ export default function MenuPrincipal({ rol }: Props) {
 
                 <p className="mt-1 text-sm text-slate-500">
                   {permitido
-                    ? opcion.descripcion
-                    : 'Acceso restringido para tu rol'}
+                  ? opcion.ruta === '/operario' && rol === 'mantenimiento'
+                    ? 'Gestionar incidencias'
+                    : opcion.descripcion
+                  : 'Acceso restringido para tu rol'}
                 </p>
               </div>
             </button>

@@ -22,6 +22,15 @@ def buscar_reparacion(session: Session, reparacion_id: int):
         .where(Reparacion.id == reparacion_id)
     )
     return session.exec(consulta).first()
+    
+# Bloquear la reparación para evitar consumos durante su cierre.
+def bloquear_reparacion(session: Session, reparacion_id: int):
+    consulta = (
+        select(Reparacion)
+        .where(Reparacion.id == reparacion_id)
+        .with_for_update()
+    )
+    return session.exec(consulta).first()
 
 
 def buscar_repuesto(session: Session, codigo: str):

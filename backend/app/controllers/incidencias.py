@@ -9,7 +9,7 @@ from app.auth_dependencies import (
     requiere_roles,
 )
 from app.database import get_session
-from app.models.mantenimiento import Incidencia, Maquina
+from app.models.mantenimiento import Incidencia, Maquina , Reparacion
 from app.models.usuario import RolUsuario, Usuario
 
 
@@ -162,10 +162,10 @@ def actualizar_estado_incidencia(
         requiere_roles(RolUsuario.MANTENIMIENTO)
     )
 ):
-    incidencia = session.get(
-        Incidencia,
-        incidencia_id
-    )
+    incidencia = session.exec( 
+        select(Incidencia).where(Incidencia.id == incidencia_id)
+        .with_for_update()
+    ).first()
 
     if incidencia is None:
         raise HTTPException(
@@ -184,12 +184,32 @@ def actualizar_estado_incidencia(
             status_code=400,
             detail="Estado de incidencia no válido"
         )
+    # Comprobar que la incidencia esté en reparación antes de finalizarla.
+    if incidencia.estado != "en_reparacion" or datos.estado != "resuelta":
+        raise HTTPException(
+            status_code=409,
+            detail="Solo se pueden finalizar incidencias en reparación"
+        )
+    # Buscar y bloquear la reparación asociada a la incidencia.
+    reparacion = session.exec(
+        select(Reparacion)
+        .where(Reparacion.incidencia_id == incidencia_id)
+        .with_for_update()
+    ).first()
 
-    # Registrar la fecha de cierre de la incidencia
-    if datos.estado == "resuelta" and incidencia.estado != "resuelta":
-        incidencia.fecha_cierre = datetime.now(timezone.utc)
-    elif datos.estado != "resuelta":
-        incidencia.fecha_cierre = None
+    # Comprobar que exista una reparación en curso.
+    if reparacion is None or reparacion.estado != "en_reparacion":
+        raise HTTPException(
+            status_code=409,
+            detail="No existe una reparación activa para esta incidencia"
+        )
+
+    # Finalizar la reparación asociada.
+    reparacion.estado = "cerrada"
+    session.add(reparacion)
+
+    # Registrar la fecha de cierre de la incidencia.
+    incidencia.fecha_cierre = datetime.now(timezone.utc)
 
     incidencia.estado = datos.estado
 
@@ -198,3 +218,4 @@ def actualizar_estado_incidencia(
     session.refresh(incidencia)
 
     return incidencia
+

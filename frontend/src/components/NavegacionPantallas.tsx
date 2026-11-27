@@ -8,12 +8,12 @@ type Props = {
 
 const opciones = [
   {
-    titulo: 'Reportar incidencias',
+    titulo: 'Incidencias',
     ruta: '/operario',
-    roles: ['operario'],
+    roles: ['operario', 'mantenimiento'],
   },
   {
-    titulo: 'Registrar uso de repuesto',
+    titulo: 'Repuestos',
     ruta: '/mantenimiento',
     roles: ['mantenimiento'],
   },
@@ -43,9 +43,24 @@ export default function NavegacionPantallas({ rol }: Props) {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const otrasPantallas = opciones.filter(
-    (opcion) => opcion.ruta !== location.pathname
-  )
+  // Adaptar la navegación de incidencias según el rol.
+  const otrasPantallas = opciones
+    .map((opcion) => {
+      if (
+        opcion.ruta === '/operario' &&
+        rol === 'mantenimiento'
+      ) {
+        return {
+          ...opcion,
+          ruta: '/gestionar-incidencias',
+        }
+      }
+
+      return opcion
+    })
+    .filter(
+      (opcion) => opcion.ruta !== location.pathname
+    )
 
   return (
     <nav className="mx-auto w-full max-w-5xl px-4 py-6">

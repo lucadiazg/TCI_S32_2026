@@ -5,7 +5,7 @@ from sqlmodel import Session
 
 from app.services.alertas_stock import generar_alerta_umbral
 from app.repositories.usos import (
-    buscar_reparacion,
+    bloquear_reparacion,
     bloquear_repuesto,
     guardar_uso,
 )
@@ -35,14 +35,13 @@ def registrar_uso(
         if cantidad < 1:
             raise DatosInvalidos("La cantidad debe ser mayor que cero")
 
-        datos_reparacion = buscar_reparacion(session, reparacion_id)
+        datos_reparacion = bloquear_reparacion(session, reparacion_id)
 
         if datos_reparacion is None:
             raise NoEncontrado("La reparación no existe")
 
-        reparacion, _incidencia = datos_reparacion
 
-        if reparacion.estado != "en_reparacion":
+        if datos_reparacion.estado != "en_reparacion":
             raise ConflictoUso(
                 "La reparación no admite registrar consumos"
             )

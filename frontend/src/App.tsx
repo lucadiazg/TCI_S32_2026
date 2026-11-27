@@ -13,6 +13,7 @@ import './App.css'
 import Login from './pages/Login'
 import MenuPrincipal from './pages/MenuPrincipal'
 import ReportarIncidencia from './pages/ReportarIncidencia'
+import GestionarIncidencias from './pages/GestionarIncidencias'
 import CargarStockRecibido from './pages/CargarStockRecibido'
 import RegistrarUsoRepuesto from './pages/RegistrarUsoRepuesto'
 import Compras from './pages/Compras'
@@ -143,7 +144,7 @@ function AppRoutes() {
         if (activo) {
           setCargando(false)
         }
-        return
+        return 
       }
 
       try {
@@ -259,6 +260,26 @@ function AppRoutes() {
                 onLogout={manejarLogout}
               >
                 <RegistrarUsoRepuesto />
+              </Panel>
+            )}
+          </RutaProtegida>
+        }
+      />
+      {/* GESTIÓN DE INCIDENCIAS - MANTENIMIENTO */}
+      <Route
+        path="/gestionar-incidencias"
+        element={
+          <RutaProtegida
+            usuario={usuario}
+            rol="mantenimiento"
+          >
+            {usuario && (
+              <Panel
+                usuario={usuario}
+                titulo="Gestión de incidencias"
+                onLogout={manejarLogout}
+              >
+                <GestionarIncidencias />
               </Panel>
             )}
           </RutaProtegida>
